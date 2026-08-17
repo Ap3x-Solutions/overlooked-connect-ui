@@ -1,0 +1,136 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Management Dashboard";
+    var months = new[] { "J","F","M","A","M","J","J","A","S","O","N","D" };
+    var userName = Context.Session.GetString("UserName") ?? "T. Mahlangu";
+    var firstName = userName.Contains('.') ? "Thabo" : userName;
+}
+
+<div class="page-head">
+    <div>
+        <h1>Good morning, @firstName</h1>
+        <p class="sub">Wednesday, 22 July 2026 &nbsp;&middot;&nbsp; @Model.Approvals.Count items awaiting your approval</p>
+    </div>
+    <a class="btn-ovl" asp-controller="Reports" asp-action="Index"><i class="fas fa-file-export me-2"></i>Export report</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="label">Active employees</div><div class="value">248</div>
+            <div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>+6 this month</div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="label">Open incidents</div><div class="value">7</div>
+            <div class="delta" style="color:#C0392B;"><span class="pip" style="background:#C0392B;"></span>2 high severity</div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="label">Pending suppliers</div><div class="value">12</div>
+            <div class="delta" style="color:#E08E0B;"><span class="pip" style="background:#E08E0B;"></span>4 awaiting documents</div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="label">LTIFR (12-month)</div><div class="value">0.11</div>
+            <div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>Below 0.15 target</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-xl-8">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div>
+                        <div class="card-title-sm">Production vs target &mdash; ROM tons per month</div>
+                        <div class="text-muted" style="font-size:.74rem;">Tswelopele + Katlego combined</div>
+                    </div>
+                    <span class="pill pill-ok">ON TRACK</span>
+                </div>
+                <div class="chart mt-3">
+                    @for (var i = 0; i < Model.Production.Length; i++)
+                    {
+                        <div class="bar @(i >= 9 ? "gold" : "")" style="height:@(Model.Production[i])%" title="@months[i]: @Model.Production[i]% of target"></div>
+                    }
+                </div>
+                <div class="chart-axis">
+                    @foreach (var m in months) { <span>@m</span> }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="card-title-sm">Approvals queue</span>
+                    <span class="pill pill-bad">@Model.Approvals.Count</span>
+                </div>
+                @foreach (var a in Model.Approvals)
+                {
+                    <div class="d-flex justify-content-between align-items-start py-2 border-bottom">
+                        <div>
+                            <div style="font-size:.79rem;font-weight:600;color:#0F1E3A;">@a.Type &mdash; @a.Requester</div>
+                            <div class="text-muted" style="font-size:.7rem;">@a.Detail</div>
+                        </div>
+                        <a asp-controller="Dashboard" asp-action="Approvals" style="font-size:.7rem;font-weight:600;color:#D4A544;white-space:nowrap;">Review &rarr;</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-8">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="card-title-sm">Recent safety incidents</span>
+                    <a asp-controller="Safety" asp-action="Index" style="font-size:.75rem;font-weight:600;color:#D4A544;">View all &rarr;</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Incident</th><th>Site</th><th>Severity</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @foreach (var i in Model.RecentIncidents)
+                        {
+                            <tr>
+                                <td class="t-strong">@i.IncidentId &middot; @i.Title</td>
+                                <td>@i.Site</td>
+                                <td>
+                                    <span class="pill @(i.Severity == "High" ? "pill-bad" : i.Severity == "Medium" ? "pill-warn" : "pill-ok")">@i.Severity</span>
+                                </td>
+                                <td class="text-muted">@i.InvestigationStatus</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <div class="card-title-sm mb-3">Workforce by business unit</div>
+                @foreach (var w in Model.Workforce)
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between" style="font-size:.78rem;">
+                            <span>@w.Unit</span><b>@w.Headcount</b>
+                        </div>
+                        <div class="pbar mt-2"><i data-width="@(w.Headcount * 100 / 118)" style="width:0;background-color:@w.Colour;"></i></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

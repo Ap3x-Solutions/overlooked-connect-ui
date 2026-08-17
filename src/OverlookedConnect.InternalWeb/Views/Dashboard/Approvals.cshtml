@@ -1,0 +1,72 @@
+@model List<ApprovalItem>
+@{
+    ViewData["Title"] = "Approvals Queue";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Approvals Queue</h1>
+        <p class="sub">@Model.Count items awaiting your approval &nbsp;&middot;&nbsp; oldest pending 3 days</p>
+    </div>
+    <a class="btn-ovl-green" href="#"><i class="fas fa-check me-2"></i>Approve selected</a>
+</div>
+
+<div class="chip-row">
+    <span class="chip active">All (@Model.Count)</span>
+    <span class="chip">Leave (@Model.Count(a => a.Type == "Leave"))</span>
+    <span class="chip">Suppliers (@Model.Count(a => a.Type == "Supplier"))</span>
+    <span class="chip">CSR spend (@Model.Count(a => a.Type == "CSR spend"))</span>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:44px;"></th>
+                    <th>Request</th><th>Requested by</th><th>Detail</th><th>Waiting</th><th style="width:210px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td><input class="form-check-input" type="checkbox" aria-label="Select request" /></td>
+                    <td><span class="pill @(a.Type == "Leave" ? "pill-info" : a.Type == "Supplier" ? "pill-ok" : "pill-warn")">@a.Type.ToUpper()</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar avatar-sm" style="background-color:@a.AvatarColour;">@a.Initials</span>
+                            <span>
+                                <span class="t-strong">@a.Requester</span>
+                                <span class="t-sub">@a.Department</span>
+                            </span>
+                        </div>
+                    </td>
+                    <td>@a.Detail</td>
+                    <td><span style="font-weight:600;color:@(a.Overdue ? "#E08E0B" : "#22A55B");">@a.Waiting</span></td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <form asp-action="Approve" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="requester" value="@a.Requester" />
+                                <input type="hidden" name="type" value="@a.Type" />
+                                <button type="submit" class="btn-ovl-green btn-sm-ovl">Approve</button>
+                            </form>
+                            <form asp-action="Decline" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="requester" value="@a.Requester" />
+                                <input type="hidden" name="type" value="@a.Type" />
+                                <button type="submit" class="btn-ovl-red btn-sm-ovl">Decline</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted mt-3" style="font-size:.75rem;font-style:italic;">
+    Approving an item writes an audit entry recording the acting user, timestamp, and the value before and after the change (NFR-08).
+</p>

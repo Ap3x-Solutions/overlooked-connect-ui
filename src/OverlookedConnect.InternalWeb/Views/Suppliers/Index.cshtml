@@ -1,0 +1,122 @@
+@model SupplierQueueViewModel
+@{
+    ViewData["Title"] = "Supplier Review Queue";
+    var sel = Model.Selected;
+    var filter = ViewBag.Filter as string ?? "All";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Supplier Review Queue</h1>
+        <p class="sub">12 applications pending review &nbsp;&middot;&nbsp; 4 awaiting documents</p>
+    </div>
+    <a class="btn-ovl-ghost" href="#"><i class="fas fa-file-export me-2"></i>Export list</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card edge-left" style="border-left-color:#E08E0B;"><div class="label">Pending review</div><div class="value">12</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card edge-left" style="border-left-color:#C0392B;"><div class="label">Awaiting documents</div><div class="value">4</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card edge-left" style="border-left-color:#22A55B;"><div class="label">Approved this month</div><div class="value">28</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card edge-left" style="border-left-color:#0F1E3A;"><div class="label">Avg. review time</div><div class="value">3.2<span style="font-size:1rem;"> days</span></div></div></div>
+</div>
+
+<div class="chip-row">
+    @foreach (var f in new[] { "All", "Under review", "Awaiting docs", "Verified" })
+    {
+        <a class="chip @(filter == f ? "active" : "")" asp-action="Index" asp-route-filter="@f">@f</a>
+    }
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <div class="card">
+            <div class="card-body p-4 pb-2"><span class="card-title-sm">Applications</span></div>
+            <div>
+                @foreach (var s in Model.Applications)
+                {
+                    <a class="list-row @(sel?.SupplierId == s.SupplierId ? "selected" : "")" asp-action="Index" asp-route-id="@s.SupplierId" asp-route-filter="@filter">
+                        <span class="avatar avatar-sm" style="background-color:@s.AvatarColour;">@s.Initials</span>
+                        <span class="flex-grow-1">
+                            <span class="r-title">@s.CompanyName</span>
+                            <span class="r-sub">@s.Reference</span>
+                        </span>
+                        <span class="d-none d-md-inline" style="font-size:.74rem;width:70px;">@s.BbbeeLevel</span>
+                        <span style="font-size:.74rem;font-weight:600;width:44px;color:@(s.DocumentsVerified == s.DocumentsRequired ? "#1E6B3A" : "#E08E0B");">@s.DocumentsVerified/@s.DocumentsRequired</span>
+                        <span class="pill @(s.Status == "Verified" ? "pill-ok" : s.Status == "Under review" ? "pill-warn" : "pill-bad")">@s.Status</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        @if (sel is not null)
+        {
+            <div class="card">
+                <div class="card-body p-4">
+                    <span class="card-title-sm d-block mb-3">Application detail</span>
+                    <hr class="mt-0 mb-3" />
+
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="avatar avatar-lg" style="background-color:@sel.AvatarColour;">@sel.Initials</span>
+                        <span>
+                            <h2 style="font-size:1.05rem;">@sel.CompanyName</h2>
+                            <span class="text-muted" style="font-size:.72rem;">@sel.Reference</span>
+                        </span>
+                    </div>
+
+                    <span class="pill @(sel.Status == "Verified" ? "pill-ok" : sel.Status == "Under review" ? "pill-warn" : "pill-bad")">@sel.Status.ToUpper()</span>
+
+                    <div class="row g-3 mt-2" style="font-size:.78rem;">
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Reg. number</span><b>@sel.RegistrationNumber</b></div>
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">B-BBEE level</span><b>@sel.BbbeeLevel</b></div>
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Employees</span><b>@sel.Employees</b></div>
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Province</span><b>@sel.Province</b></div>
+                        <div class="col-12"><span class="text-muted d-block" style="font-size:.7rem;">Category</span><b>@sel.Category</b></div>
+                    </div>
+
+                    <hr class="my-3" />
+                    <span class="form-label d-block">Compliance documents</span>
+
+                    @if (sel.Documents.Any())
+                    {
+                        @foreach (var d in sel.Documents)
+                        {
+                            var colour = d.Status == "Verified" ? "#22A55B" : d.Status == "Pending" ? "#E08E0B" : "#C0392B";
+                            <div class="d-flex justify-content-between align-items-center py-2" style="font-size:.76rem;">
+                                <span><span class="d-inline-block me-2" style="width:10px;height:10px;border-radius:50%;background:@colour;"></span>@d.DocType</span>
+                                <span style="color:@colour;font-weight:600;font-size:.7rem;">@d.Status</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted" style="font-size:.76rem;">All @sel.DocumentsRequired documents verified.</p>
+                    }
+
+                    <div class="d-flex gap-2 mt-4">
+                        <form asp-action="RequestDocuments" method="post" class="flex-grow-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="supplierId" value="@sel.SupplierId" />
+                            <input type="hidden" name="companyName" value="@sel.CompanyName" />
+                            <button type="submit" class="btn-ovl-ghost w-100">Request docs</button>
+                        </form>
+                        <form asp-action="Approve" method="post" class="flex-grow-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="supplierId" value="@sel.SupplierId" />
+                            <input type="hidden" name="companyName" value="@sel.CompanyName" />
+                            <button type="submit" class="btn-ovl-green w-100">Approve</button>
+                        </form>
+                    </div>
+
+                    @if (sel.DocumentsVerified < sel.DocumentsRequired)
+                    {
+                        <p class="text-muted mt-2 mb-0" style="font-size:.7rem;font-style:italic;">
+                            Approval is blocked until all @sel.DocumentsRequired compliance documents are verified.
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

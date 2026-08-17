@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using OverlookedConnect.InternalWeb.Models;
+using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.InternalWeb.Controllers;
 

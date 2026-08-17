@@ -1,0 +1,89 @@
+@model List<LeaveRequest>
+@{
+    ViewData["Title"] = "Leave Management";
+    var filter = ViewBag.Filter as string ?? "All";
+    var clash = Model.FirstOrDefault(r => r.RosterClash);
+}
+
+<div class="page-head">
+    <div>
+        <h1>Leave Management</h1>
+        <p class="sub">August 2026 &nbsp;&middot;&nbsp; @Model.Count requests this month</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn-ovl-ghost" asp-action="Roster"><i class="fas fa-calendar-days me-2"></i>Shift roster</a>
+        <a class="btn-ovl" href="#"><i class="fas fa-plus me-2"></i>Log leave</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Pending approval</div><div class="value">6</div><div class="delta" style="color:#E08E0B;"><span class="pip" style="background:#E08E0B;"></span>2 over 3 days old</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Approved this month</div><div class="value">23</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>+4 on July</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">On leave today</div><div class="value">8</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>3.2% of workforce</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Roster clashes detected</div><div class="value">2</div><div class="delta" style="color:#C0392B;"><span class="pip" style="background:#C0392B;"></span>blocked automatically</div></div></div>
+</div>
+
+<div class="chip-row">
+    @foreach (var f in new[] { "All", "Pending", "Approved", "Declined" })
+    {
+        <a class="chip @(filter == f ? "active" : "")" asp-action="Index" asp-route-filter="@f">@f</a>
+    }
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Balance</th><th>Status</th><th style="width:200px;"></th></tr></thead>
+            <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar avatar-md" style="background-color:@r.AvatarColour;">@r.Initials</span>
+                            <span><span class="t-strong">@r.EmployeeName</span><span class="t-sub">@r.EmployeeId</span></span>
+                        </div>
+                    </td>
+                    <td>@r.LeaveType</td>
+                    <td>@r.Dates</td>
+                    <td class="t-strong">@r.Days.ToString("0.0")</td>
+                    <td class="text-muted">@r.BalanceAfter.ToString("0.0") d</td>
+                    <td><span class="pill @(r.ApprovalStatus == "Approved" ? "pill-ok" : r.ApprovalStatus == "Pending" ? "pill-warn" : "pill-bad")">@r.ApprovalStatus</span></td>
+                    <td>
+                        @if (r.ApprovalStatus == "Pending")
+                        {
+                            <div class="d-flex gap-2">
+                                <form asp-action="Approve" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="leaveId" value="@r.LeaveId" />
+                                    <input type="hidden" name="employeeName" value="@r.EmployeeName" />
+                                    <input type="hidden" name="days" value="@r.Days" />
+                                    <button type="submit" class="btn-ovl-green btn-sm-ovl">Approve</button>
+                                </form>
+                                <form asp-action="Decline" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="leaveId" value="@r.LeaveId" />
+                                    <input type="hidden" name="employeeName" value="@r.EmployeeName" />
+                                    <button type="submit" class="btn-ovl-red btn-sm-ovl">Decline</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted" style="font-size:.74rem;">View &rarr;</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (clash is not null)
+{
+    <div class="note note-bad mt-3">
+        <i class="fas fa-circle-exclamation me-2"></i>
+        @clash.EmployeeName's request was declined automatically: @clash.ClashDetail
+    </div>
+}

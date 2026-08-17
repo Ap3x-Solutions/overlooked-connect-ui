@@ -1,0 +1,85 @@
+@model List<ShiftEntry>
+@{
+    ViewData["Title"] = "Shift Roster";
+    var days = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    var dates = new[] { "11 Aug", "12 Aug", "13 Aug", "14 Aug", "15 Aug", "16 Aug", "17 Aug" };
+    string CellClass(string k) => k switch
+    {
+        "Day" => "rc-day", "Night" => "rc-night", "Leave" => "rc-leave", _ => "rc-rest"
+    };
+}
+
+<div class="page-head">
+    <div>
+        <h1>Shift Roster</h1>
+        <p class="sub">@ViewBag.Site &nbsp;&middot;&nbsp; August 2026</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn-ovl-ghost" href="#"><i class="fas fa-file-pdf me-2"></i>Export to PDF</a>
+        <form asp-action="PublishRoster" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-ovl"><i class="fas fa-bullhorn me-2"></i>Publish &amp; notify</button>
+        </form>
+    </div>
+</div>
+
+<div class="chip-row">
+    <a class="chip active" asp-action="Roster" asp-route-site="Forzando South">Forzando South</a>
+    <a class="chip" asp-action="Roster" asp-route-site="Forzando North">Forzando North</a>
+    <a class="chip" asp-action="Roster" asp-route-site="Dorstfontein West">Dorstfontein West</a>
+    <a class="chip" asp-action="Roster" asp-route-site="Overlooked Colliery">Overlooked Colliery</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+            <span class="card-title-sm">Week of 11 &ndash; 17 August 2026</span>
+            <div class="d-flex gap-3" style="font-size:.72rem;">
+                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#22A55B;"></span>Day</span>
+                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#3A5C8F;"></span>Night</span>
+                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#C3CCDC;"></span>Rest</span>
+                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#E08E0B;"></span>Leave</span>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table" style="min-width:900px;">
+                <thead>
+                    <tr>
+                        <th style="width:220px;">Employee</th>
+                        @for (var d = 0; d < days.Length; d++)
+                        {
+                            <th class="text-center">@days[d]<span class="d-block text-muted" style="font-weight:400;text-transform:none;">@dates[d]</span></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var s in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="avatar avatar-sm" style="background-color:@s.AvatarColour;">@s.Initials</span>
+                                <span class="t-strong">@s.EmployeeName</span>
+                            </div>
+                        </td>
+                        @foreach (var k in s.Pattern)
+                        {
+                            <td><div class="roster-cell @CellClass(k)">@k</div></td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="note note-warn mt-3">
+    <i class="fas fa-triangle-exclamation me-2"></i>
+    S. Dlamini has requested leave 14&ndash;18 August, which overlaps rostered day shifts on 14 and 15 August. Resolve before publishing.
+</div>
+
+<p class="text-muted mt-3" style="font-size:.78rem;">
+    Coverage: 6 of 8 required operators rostered for the week. 2 positions unfilled on Saturday and Sunday night shift.
+</p>

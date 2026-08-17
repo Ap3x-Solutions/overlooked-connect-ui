@@ -1,0 +1,102 @@
+@model List<Employee>
+@{
+    ViewData["Title"] = "Employee Management";
+    var unit = ViewBag.BusinessUnit as string ?? "Mining Operations";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Employee Management</h1>
+        <p class="sub">248 active employees across 5 business units</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn-ovl-ghost" href="#"><i class="fas fa-file-import me-2"></i>Import CSV</a>
+        <a class="btn-ovl" href="#"><i class="fas fa-plus me-2"></i>Add employee</a>
+    </div>
+</div>
+
+<div class="chip-row">
+    <a class="chip @(unit == "All units" ? "active" : "")" asp-action="Index" asp-route-businessUnit="All units">All employees</a>
+    <a class="chip @(unit == "Mining Operations" ? "active" : "")" asp-action="Index" asp-route-businessUnit="Mining Operations">Mining Operations</a>
+    <a class="chip" asp-action="Index" asp-route-businessUnit="Processing &amp; Logistics">Processing &amp; Logistics</a>
+    <a class="chip" asp-action="Index" asp-route-businessUnit="Corporate Services">Corporate Services</a>
+    <a class="chip @(ViewBag.Status as string == "On leave" ? "active" : "")" asp-action="Index" asp-route-status="On leave">On leave</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body p-4">
+        <div class="card-title-sm mb-3">Filter results</div>
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label">Business unit</label>
+                <select name="businessUnit" class="form-select">
+                    <option>All units</option>
+                    <option selected="@(unit == "Mining Operations")">Mining Operations</option>
+                    <option>Processing &amp; Logistics</option>
+                    <option>Corporate Services</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label">Employment status</label>
+                <select name="status" class="form-select">
+                    <option>All</option><option selected>Active</option><option>On leave</option><option>Suspended</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label">Search by name or employee ID</label>
+                <input name="search" class="form-control" value="@ViewBag.Search" placeholder="e.g. Dlamini or EMP-1042" />
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn-ovl flex-grow-1">Apply</button>
+                <a class="btn-ovl-ghost" asp-action="Index">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Employee</th><th>Employee ID</th><th>Business unit</th><th>Job title</th><th>Leave bal.</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar avatar-md" style="background-color:@e.AvatarColour;">@e.Initials</span>
+                            <span><span class="t-strong">@e.FullName</span><span class="t-sub">@e.Site</span></span>
+                        </div>
+                    </td>
+                    <td class="text-muted">@e.EmployeeId</td>
+                    <td>@e.BusinessUnit</td>
+                    <td>@e.JobTitle</td>
+                    <td class="t-strong">@e.LeaveBalance.ToString("0.0") d</td>
+                    <td>
+                        <span class="pill @(e.Status == "Active" ? "pill-ok" : e.Status == "On leave" ? "pill-warn" : "pill-bad")">@e.Status</span>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">No employees match the current filters.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <span class="text-muted" style="font-size:.75rem;">Showing @Model.Count of 118 in @unit</span>
+    <nav aria-label="Employee pages">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+            <li class="page-item active"><span class="page-link" style="background:#0F1E3A;border-color:#0F1E3A;">1</span></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+        </ul>
+    </nav>
+</div>

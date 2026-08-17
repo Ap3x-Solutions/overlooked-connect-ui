@@ -1,0 +1,50 @@
+@{
+    string CurrentAction() => ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Tab(string action) => CurrentAction() == action ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OVL Staff</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/internal.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="phone-shell">
+        <div class="phone-status">
+            <span>09:41</span>
+            <span><i class="fas fa-signal me-2"></i><i class="fas fa-wifi me-2"></i><i class="fas fa-battery-three-quarters"></i></span>
+        </div>
+
+        @RenderBody()
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="px-3">
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="font-size:.78rem;">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        <nav class="phone-tabs">
+            <a class="@Tab("Index")" asp-controller="Staff" asp-action="Index"><i class="fas fa-house"></i>Home</a>
+            <a class="@Tab("Leave")" asp-controller="Staff" asp-action="Leave"><i class="fas fa-calendar-check"></i>Leave</a>
+            <a class="@Tab("Incident")" asp-controller="Staff" asp-action="Incident"><i class="fas fa-triangle-exclamation"></i>Report</a>
+            <a class="@Tab("Payslip")" asp-controller="Staff" asp-action="Payslip"><i class="fas fa-file-invoice-dollar"></i>Payslip</a>
+        </nav>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/internal.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,100 @@
+@model LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "_LoginLayout";
+}
+
+<div class="login-split">
+    <div class="login-brand">
+        <div class="d-flex align-items-center mb-5 position-relative">
+            <span class="brand-mark" style="width:44px;height:44px;background:#D4A544;color:#0F1E3A;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-weight:800;font-size:1.35rem;margin-right:14px;">O</span>
+            <span>
+                <b style="display:block;font-size:1.2rem;letter-spacing:1.3px;">OVERLOOKED</b>
+                <span style="color:#8FA0BE;font-size:.72rem;">Connect &middot; Internal Operations Platform</span>
+            </span>
+        </div>
+
+        <h2>One platform for<br />people, safety and<br />suppliers.</h2>
+        <p style="color:#C6D2E6;font-size:.95rem;line-height:1.8;max-width:36rem;margin-top:24px;" class="position-relative">
+            Employee records, leave and shift scheduling, safety incidents, supplier onboarding and CSR
+            reporting &mdash; in a single auditable system.
+        </p>
+
+        <div class="d-flex gap-5 mt-5 position-relative">
+            <div><div style="color:#D4A544;font-size:1.6rem;font-weight:800;">248</div><div style="color:#8FA0BE;font-size:.72rem;">Employees</div></div>
+            <div><div style="color:#D4A544;font-size:1.6rem;font-weight:800;">5</div><div style="color:#8FA0BE;font-size:.72rem;">Business units</div></div>
+            <div><div style="color:#D4A544;font-size:1.6rem;font-weight:800;">0.11</div><div style="color:#8FA0BE;font-size:.72rem;">LTIFR</div></div>
+        </div>
+
+        <p class="position-relative" style="color:#7E8FAC;font-size:.72rem;margin-top:auto;padding-top:48px;">
+            <i class="fas fa-shield-halved me-2"></i>Protected by Microsoft Entra External ID &middot; MFA enforced
+        </p>
+    </div>
+
+    <div class="login-form">
+        <div class="inner">
+            <h1 class="mb-2" style="font-size:1.9rem;">Sign in</h1>
+            <p class="text-muted mb-4" style="font-size:.85rem;">Use your OVL work account to continue.</p>
+
+            <form asp-action="Login" method="post" class="needs-validation" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email address</label>
+                    <input asp-for="Email" class="form-control" placeholder="n.sithole@overlookedgroup.co.za" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="••••••••••••" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DemoRole" class="form-label">Sign in as (demonstration role)</label>
+                    <select asp-for="DemoRole" class="form-select">
+                        <option value="executive">Executive &mdash; T. Mahlangu</option>
+                        <option value="hr">HR &amp; Operations &mdash; N. Sithole</option>
+                        <option value="safety">Safety Officer &mdash; P. Naidoo</option>
+                        <option value="procurement">Procurement &mdash; S. Nkosi</option>
+                        <option value="employee">Employee (staff app) &mdash; S. Dlamini</option>
+                    </select>
+                    <div class="form-text" style="font-size:.72rem;">
+                        Task 1 only. In Task 2 the role is read from the Entra External ID role claim rather than selected here.
+                    </div>
+                    <span asp-validation-for="DemoRole" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                        <label asp-for="RememberMe" class="form-check-label" style="font-size:.78rem;font-weight:400;">Keep me signed in</label>
+                    </div>
+                    <a href="#" style="font-size:.78rem;font-weight:600;color:#0F1E3A;">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-ovl w-100" style="padding:13px;">Sign in</button>
+
+                <div class="d-flex align-items-center gap-3 my-4">
+                    <hr class="flex-grow-1 m-0" /><span class="text-muted" style="font-size:.75rem;">or</span><hr class="flex-grow-1 m-0" />
+                </div>
+
+                <button type="button" class="btn-ovl-ghost w-100" style="padding:13px;">
+                    <i class="fab fa-microsoft me-2" style="color:#0F6CBD;"></i>Sign in with Microsoft
+                </button>
+
+                <div class="note note-warn mt-4">
+                    Multi-factor authentication is required for the Executive, HR, Safety and Procurement roles.
+                </div>
+
+                <p class="text-center text-muted mt-4 mb-0" style="font-size:.72rem;">
+                    Staff application? <a asp-controller="Staff" asp-action="Index" style="font-weight:600;color:#0F1E3A;">Open the mobile view</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
