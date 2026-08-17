@@ -1,0 +1,95 @@
+@{
+    ViewData["Title"] = "Staff Home";
+    Layout = "_StaffLayout";
+}
+
+<div class="phone-appbar">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h1>Good morning, Sipho</h1>
+            <div class="sub">Forzando South &middot; Section 4B</div>
+        </div>
+        <span class="avatar avatar-md" style="background-color:#2C4A7A;">SD</span>
+    </div>
+</div>
+
+<div style="background:linear-gradient(118deg,#0F1E3A,#254070);color:#fff;padding:24px 20px;">
+    <div style="font-size:.62rem;font-weight:700;letter-spacing:1.4px;color:#D4A544;">CURRENTLY</div>
+    <div style="font-size:1.85rem;font-weight:800;margin-top:6px;">Clocked in</div>
+    <div style="font-size:.8rem;color:#C6D2E6;margin-top:6px;">Since 06:02 &nbsp;&middot;&nbsp; 3 h 39 m on shift</div>
+    <div style="font-size:.74rem;color:#8FA0BE;margin-top:10px;">
+        <span class="d-inline-block me-2" style="width:9px;height:9px;border-radius:50%;background:#22A55B;"></span>Day shift &middot; ends 18:00
+    </div>
+</div>
+
+<div class="phone-body">
+    <form asp-action="ClockOut" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn-ovl w-100" style="background-color:#C0392B;padding:15px;font-size:.92rem;">Clock out</button>
+    </form>
+    <p class="text-muted text-center mt-2" style="font-size:.7rem;">Your location is captured when you clock in and out.</p>
+
+    <h2 style="font-size:1rem;" class="mt-4 mb-3">Quick actions</h2>
+    <div class="row g-3">
+        <div class="col-6">
+            <a class="card d-block h-100 text-decoration-none" asp-action="Leave">
+                <div class="card-body p-3">
+                    <span class="d-grid" style="width:34px;height:34px;border-radius:8px;background:#2C5691;place-items:center;color:#fff;"><i class="fas fa-calendar-check"></i></span>
+                    <div style="font-size:.82rem;font-weight:600;color:#0F1E3A;margin-top:12px;">Request leave</div>
+                    <div class="text-muted" style="font-size:.68rem;">12.5 days available</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a class="card d-block h-100 text-decoration-none" asp-action="Incident">
+                <div class="card-body p-3">
+                    <span class="d-grid" style="width:34px;height:34px;border-radius:8px;background:#C0392B;place-items:center;color:#fff;"><i class="fas fa-triangle-exclamation"></i></span>
+                    <div style="font-size:.82rem;font-weight:600;color:#0F1E3A;margin-top:12px;">Report incident</div>
+                    <div class="text-muted" style="font-size:.68rem;">Capture photo evidence</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <a class="card d-block h-100 text-decoration-none" asp-action="Payslip">
+                <div class="card-body p-3">
+                    <span class="d-grid" style="width:34px;height:34px;border-radius:8px;background:#22A55B;place-items:center;color:#fff;"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <div style="font-size:.82rem;font-weight:600;color:#0F1E3A;margin-top:12px;">View payslip</div>
+                    <div class="text-muted" style="font-size:.68rem;">July 2026 available</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6">
+            <div class="card h-100">
+                <div class="card-body p-3">
+                    <span class="d-grid" style="width:34px;height:34px;border-radius:8px;background:#D4A544;place-items:center;color:#0F1E3A;"><i class="fas fa-clock"></i></span>
+                    <div style="font-size:.82rem;font-weight:600;color:#0F1E3A;margin-top:12px;">My shifts</div>
+                    <div class="text-muted" style="font-size:.68rem;">Next: Tue 12 Aug, day</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 style="font-size:1rem;" class="mt-4 mb-3">This week</h2>
+    <div class="card"><div class="card-body p-3">
+        <div class="d-flex justify-content-between py-2 border-bottom" style="font-size:.8rem;"><span class="text-muted">Hours worked</span><b>38.5 h</b></div>
+        <div class="d-flex justify-content-between py-2 border-bottom" style="font-size:.8rem;"><span class="text-muted">Shifts completed</span><b>4 of 5</b></div>
+        <div class="d-flex justify-content-between py-2" style="font-size:.8rem;"><span class="text-muted">Overtime</span><b>2.5 h</b></div>
+    </div></div>
+
+    <div class="note note-warn mt-3">
+        <b style="display:block;">Safety toolbox talk</b>
+        Conveyor guarding &mdash; 15 min, due before your next shift.
+    </div>
+
+    <h2 style="font-size:1rem;" class="mt-4 mb-2">Recent activity</h2>
+    <div style="font-size:.78rem;">
+        <div class="d-flex gap-2 align-items-start py-2">
+            <span class="d-inline-block mt-1" style="width:10px;height:10px;border-radius:50%;background:#E08E0B;"></span>
+            <span><b>Leave request submitted</b><span class="d-block text-muted" style="font-size:.7rem;">18 Jul &middot; Pending</span></span>
+        </div>
+        <div class="d-flex gap-2 align-items-start py-2">
+            <span class="d-inline-block mt-1" style="width:10px;height:10px;border-radius:50%;background:#C0392B;"></span>
+            <span><b>Incident reported INC-1042</b><span class="d-block text-muted" style="font-size:.7rem;">22 Jul &middot; Under investigation</span></span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,124 @@
+@model SafetyViewModel
+@{
+    ViewData["Title"] = "Safety & Incidents";
+    var stages = SafetyController.Lifecycle;
+    var sel = Model.Selected;
+    var filter = ViewBag.Filter as string ?? "All";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Safety &amp; Incident Register</h1>
+        <p class="sub">7 open incidents &nbsp;&middot;&nbsp; 2 high severity &nbsp;&middot;&nbsp; LTIFR 0.11</p>
+    </div>
+    <a class="btn-ovl" style="background-color:#C0392B;" href="#"><i class="fas fa-plus me-2"></i>Log incident</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Open incidents</div><div class="value">7</div><div class="delta" style="color:#C0392B;"><span class="pip" style="background:#C0392B;"></span>2 high severity</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Closed this month</div><div class="value">14</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>avg 6.2 days to close</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Escalated to DMRE</div><div class="value">1</div><div class="delta" style="color:#E08E0B;"><span class="pip" style="background:#E08E0B;"></span>statutory report filed</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">LTIFR (12-month)</div><div class="value">0.11</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>below 0.15 target</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <div class="card">
+            <div class="card-body p-4 pb-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span class="card-title-sm">Incident register</span>
+                    <div class="d-flex gap-2">
+                        @foreach (var f in new[] { "All", "Open", "Closed" })
+                        {
+                            <a class="chip @(filter == f ? "active" : "")" style="padding:6px 14px;font-size:.72rem;" asp-action="Index" asp-route-filter="@f">@f</a>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div>
+                @foreach (var i in Model.Incidents)
+                {
+                    <a class="list-row @(sel?.IncidentId == i.IncidentId ? "selected" : "")" asp-action="Index" asp-route-id="@i.IncidentId" asp-route-filter="@filter">
+                        <span class="flex-grow-1">
+                            <span style="font-size:.7rem;font-weight:700;color:#D4A544;">@i.IncidentId</span>
+                            <span class="r-title">@i.Title</span>
+                            <span class="r-sub">@i.Site</span>
+                        </span>
+                        <span class="pill @(i.Severity == "High" ? "pill-bad" : i.Severity == "Medium" ? "pill-warn" : "pill-ok")">@i.Severity</span>
+                        <span class="text-muted d-none d-md-inline" style="font-size:.72rem;width:120px;">@i.InvestigationStatus</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        @if (sel is not null)
+        {
+            <div class="card">
+                <div class="card-body p-4">
+                    <div style="font-size:.72rem;font-weight:700;color:#D4A544;">@sel.IncidentId</div>
+                    <h2 style="font-size:1.15rem;margin-top:4px;">@sel.Title</h2>
+                    <span class="pill @(sel.Severity == "High" ? "pill-bad" : sel.Severity == "Medium" ? "pill-warn" : "pill-ok") mt-2 d-inline-block">@sel.Severity.ToUpper() SEVERITY</span>
+
+                    <hr class="my-3" />
+
+                    <div class="row g-3" style="font-size:.78rem;">
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Reported by</span><b>@sel.ReportedBy</b></div>
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Date reported</span><b>@sel.DateReported</b></div>
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Site</span><b>@sel.Site</b></div>
+                        <div class="col-6"><span class="text-muted d-block" style="font-size:.7rem;">Status</span><b>@sel.InvestigationStatus</b></div>
+                    </div>
+
+                    <div class="mt-3">
+                        <span class="form-label d-block">Description</span>
+                        <p style="font-size:.78rem;line-height:1.65;">@sel.Description</p>
+                    </div>
+
+                    <div class="mt-3">
+                        <span class="form-label d-block">Evidence (@sel.PhotoCount photographs)</span>
+                        <div class="d-flex gap-2">
+                            <div class="photo-tile" style="width:78px;height:60px;"></div>
+                            <div class="photo-tile" style="width:78px;height:60px;background:linear-gradient(118deg,#3A5C8F,#6C8EBF);"></div>
+                            @if (sel.PhotoCount > 2)
+                            {
+                                <div class="photo-add" style="width:78px;height:60px;">+@(sel.PhotoCount - 2)</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <span class="form-label d-block">Lifecycle</span>
+                        <div class="lifecycle">
+                            @for (var s = 0; s < stages.Length; s++)
+                            {
+                                <span class="lc-node @(s < sel.LifecycleStage ? "done" : s == sel.LifecycleStage ? "current" : "")"></span>
+                                @if (s < stages.Length - 1)
+                                {
+                                    <span class="lc-line @(s < sel.LifecycleStage ? "done" : "")"></span>
+                                }
+                            }
+                        </div>
+                        <p class="text-muted" style="font-size:.72rem;">Now: @stages[sel.LifecycleStage] &mdash; @sel.InvestigationStatus.</p>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <form asp-action="AssignAction" method="post" class="flex-grow-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="incidentId" value="@sel.IncidentId" />
+                            <button type="submit" class="btn-ovl w-100">Assign corrective action</button>
+                        </form>
+                        @if (sel.Severity == "High")
+                        {
+                            <form asp-action="Escalate" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="incidentId" value="@sel.IncidentId" />
+                                <button type="submit" class="btn-ovl-red">Escalate</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

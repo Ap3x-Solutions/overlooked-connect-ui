@@ -1,0 +1,80 @@
+@model List<CsrProject>
+@{
+    ViewData["Title"] = "Community & CSR";
+    var committed = Model.Sum(p => p.Budget);
+    var spent = Model.Sum(p => p.Spent);
+}
+
+<div class="page-head">
+    <div>
+        <h1>Community &amp; CSR Tracking</h1>
+        <p class="sub">2026 financial year &nbsp;&middot;&nbsp; R @committed.ToString("N0") committed across @Model.Count projects</p>
+    </div>
+    <div class="d-flex gap-2">
+        <form asp-action="Publish" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-ovl-ghost"><i class="fas fa-upload me-2"></i>Publish to ESG hub</button>
+        </form>
+        <a class="btn-ovl" href="#"><i class="fas fa-plus me-2"></i>New project</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Committed 2026</div><div class="value">R @((committed/1000000).ToString("0.0"))m</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>across @Model.Count projects</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Spent to date</div><div class="value">R @((spent/1000000).ToString("0.0"))m</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>@((spent/committed*100).ToString("0"))% of commitment</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Beneficiaries reached</div><div class="value">8 420</div><div class="delta" style="color:#E08E0B;"><span class="pip" style="background:#E08E0B;"></span>target 10 000</div></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card"><div class="label">Projects in progress</div><div class="value">@Model.Count(p => p.Status == "In progress")</div><div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>@Model.Count(p => p.Status == "Complete") complete</div></div></div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body p-4 pb-2"><span class="card-title-sm">CSR projects</span></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Project</th><th>Category</th><th>Budget</th><th>Spent</th><th>Beneficiaries</th><th style="width:180px;">Progress</th><th>Status</th></tr></thead>
+            <tbody>
+            @foreach (var p in Model)
+            {
+                var tone = p.Status == "Complete" || p.Status == "Ongoing" ? "#22A55B" : "#E08E0B";
+                <tr>
+                    <td class="t-strong">@p.Name</td>
+                    <td class="text-muted">@p.Category</td>
+                    <td>R @p.Budget.ToString("N0")</td>
+                    <td class="t-strong">R @p.Spent.ToString("N0")</td>
+                    <td class="text-muted">@p.Beneficiaries</td>
+                    <td>
+                        <div class="pbar"><i data-width="@p.ProgressPercent" style="width:0;background-color:@tone;"></i></div>
+                        <span style="font-size:.68rem;font-weight:600;color:@tone;">@p.ProgressPercent%</span>
+                    </td>
+                    <td><span class="pill @(tone == "#22A55B" ? "pill-ok" : "pill-warn")">@p.Status</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <div class="card h-100"><div class="card-body p-4">
+            <span class="card-title-sm d-block mb-3">Spend by category</span>
+            @foreach (var c in new[] { ("Skills development", 34, "#1E3A63"), ("Health", 26, "#2C5691"), ("Enterprise development", 18, "#22A55B"), ("Education", 14, "#D4A544"), ("Water &amp; sanitation", 8, "#4B79B5") })
+            {
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between" style="font-size:.78rem;"><span>@Html.Raw(c.Item1)</span><b>@c.Item2%</b></div>
+                    <div class="pbar mt-2"><i data-width="@(c.Item2 * 100 / 34)" style="width:0;background-color:@c.Item3;"></i></div>
+                </div>
+            }
+        </div></div>
+    </div>
+    <div class="col-12 col-xl-5">
+        <div class="card h-100" style="border-left:4px solid #22A55B;"><div class="card-body p-4">
+            <span class="card-title-sm d-block mb-2">Published to the public ESG hub</span>
+            <p style="font-size:.8rem;line-height:1.7;">
+                Approved figures feed the Sustainability &amp; ESG page on the public website automatically.
+                Only records approved here are exposed publicly.
+            </p>
+            <p class="text-muted" style="font-size:.74rem;">Last published 14 July 2026.</p>
+            <a href="#" style="font-size:.78rem;font-weight:600;color:#1E6B3A;">View public page &rarr;</a>
+        </div></div>
+    </div>
+</div>

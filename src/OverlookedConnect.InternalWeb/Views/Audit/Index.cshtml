@@ -1,0 +1,55 @@
+@model List<AuditEntry>
+@{
+    ViewData["Title"] = "Audit Log";
+    var filter = ViewBag.ActionFilter as string ?? "All actions";
+}
+
+<div class="page-head">
+    <div>
+        <h1>Audit Log</h1>
+        <p class="sub">Immutable record of every sensitive action &nbsp;&middot;&nbsp; Executive access only</p>
+    </div>
+    <form asp-action="Export" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn-ovl-ghost"><i class="fas fa-file-export me-2"></i>Export log</button>
+    </form>
+</div>
+
+<div class="note note-info mb-3">
+    <i class="fas fa-lock me-2"></i>
+    This table is append-only. No application role holds UPDATE or DELETE permission on it, so history cannot be rewritten (NFR-08).
+</div>
+
+<div class="chip-row">
+    @foreach (var f in new[] { "All actions", "Approve", "Update", "Create" })
+    {
+        <a class="chip @(filter == f ? "active" : "")" asp-action="Index" asp-route-filter="@f">@f</a>
+    }
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>Old value</th><th>New value</th></tr></thead>
+            <tbody>
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td class="text-muted" style="font-size:.74rem;white-space:nowrap;">@e.Timestamp</td>
+                    <td><span class="t-strong">@e.User</span><span class="t-sub">@e.Role</span></td>
+                    <td>
+                        <span class="pill @(e.Action == "Approve" ? "pill-ok" : e.Action == "Create" ? "pill-info" : "pill-warn")">@e.Action</span>
+                    </td>
+                    <td>@e.Entity</td>
+                    <td class="text-muted">@e.OldValue</td>
+                    <td class="t-strong">@e.NewValue</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted mt-3" style="font-size:.75rem;">
+    Showing @Model.Count of 4 218 entries &nbsp;&middot;&nbsp; retained for 7 years in line with statutory record-keeping requirements.
+</p>

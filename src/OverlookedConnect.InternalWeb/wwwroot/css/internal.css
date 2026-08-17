@@ -1,0 +1,340 @@
+/*
+    Overlooked Connect - Internal Operations Platform stylesheet.
+    Extends the Bootstrap 5 grid with the OVL design system used on the public portal, adapted for a
+    back-office shell: a fixed navy sidebar, a light application background, dense data tables and
+    status pills. Colour tokens match wwwroot/css/site.css in OverlookedPortal so that both platforms
+    share one visual language, as required by Section 1.3 of the Task 1 documentation.
+*/
+
+:root { /* [W3Schools, [s.a.]] */
+    --navy-900: #0F1E3A;
+    --navy-800: #16294D;
+    --navy-700: #172C52;
+    --navy-600: #22406F;
+    --gold: #D4A544;
+    --gold-dark: #B8860B;
+    --gold-tint: #FCF1DC;
+    --green: #22A55B;
+    --green-dark: #1E6B3A;
+    --green-tint: #E4F5EA;
+    --amber: #E08E0B;
+    --amber-tint: #FFF9E9;
+    --red: #C0392B;
+    --red-tint: #FBE4E1;
+    --blue-tint: #EAF1FB;
+    --app-bg: #F4F6FA;
+    --surface: #FFFFFF;
+    --surface-alt: #FAFBFD;
+    --border: #E3E7ED;
+    --text-heading: #0F1E3A;
+    --text-body: #5B6675;
+    --text-muted: #9AA3B2;
+    --sidebar-w: 248px;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(15,30,58,.08);
+    --shadow-lg: 0 12px 30px rgba(15,30,58,.10);
+    --speed: .2s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--app-bg);
+    color: var(--text-body);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 { color: var(--text-heading); font-weight: 800; letter-spacing: -.015em; }
+a { text-decoration: none; }
+.text-muted { color: var(--text-muted) !important; }
+
+/* ---------------- Application shell ---------------- */
+
+.app-sidebar { /* [W3Schools, [s.a.]] */
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background-color: var(--navy-900);
+    display: flex;
+    flex-direction: column;
+    z-index: 1040;
+    transition: transform var(--speed);
+}
+
+.app-sidebar .sidebar-brand {
+    display: flex; align-items: center;
+    padding: 26px 24px 22px;
+}
+
+.app-sidebar .brand-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    background-color: var(--gold); color: var(--navy-900);
+    border-radius: 8px; font-weight: 800; font-size: 1.05rem; margin-right: 10px;
+}
+
+.app-sidebar .brand-text b { color: #fff; font-size: .85rem; font-weight: 800; letter-spacing: .9px; display: block; line-height: 1.1; }
+.app-sidebar .brand-text span { color: #8FA0BE; font-size: .62rem; }
+
+.app-sidebar .nav-list { list-style: none; padding: 0 12px; flex: 1; overflow-y: auto; }
+
+.app-sidebar .nav-list a {
+    display: flex; align-items: center; gap: 14px;
+    padding: 11px 14px; margin-bottom: 3px;
+    border-radius: 7px;
+    color: #B9C4D6; font-size: .845rem; font-weight: 500;
+    position: relative; transition: background-color var(--speed), color var(--speed);
+}
+
+.app-sidebar .nav-list a i { width: 16px; text-align: center; color: #7F8FAB; font-size: .82rem; }
+.app-sidebar .nav-list a:hover { background-color: rgba(255,255,255,.05); color: #fff; }
+
+.app-sidebar .nav-list a.active {
+    background-color: var(--navy-700); color: #fff; font-weight: 600;
+}
+.app-sidebar .nav-list a.active i { color: var(--gold); }
+.app-sidebar .nav-list a.active::before {
+    content: ""; position: absolute; left: 0; top: 8px; bottom: 8px;
+    width: 3px; border-radius: 2px; background-color: var(--gold);
+}
+
+.app-sidebar .sidebar-user {
+    border-top: 1px solid #26385C;
+    padding: 18px 24px; display: flex; align-items: center; gap: 12px;
+}
+.app-sidebar .sidebar-user .u-name { color: #fff; font-size: .78rem; font-weight: 600; display: block; line-height: 1.2; }
+.app-sidebar .sidebar-user .u-role { color: #8FA0BE; font-size: .68rem; }
+.app-sidebar .sidebar-user a { color: #8FA0BE; font-size: .8rem; }
+.app-sidebar .sidebar-user a:hover { color: var(--gold); }
+
+.app-main { margin-left: var(--sidebar-w); min-height: 100vh; }
+
+.app-topbar {
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 72px; display: flex; align-items: center; gap: 16px;
+    padding: 0 32px; position: sticky; top: 0; z-index: 1030;
+}
+
+.app-topbar .search-box {
+    flex: 0 1 340px; position: relative;
+}
+.app-topbar .search-box input {
+    width: 100%; height: 38px; border: 1px solid var(--border);
+    border-radius: 6px; background-color: var(--app-bg);
+    padding: 0 14px 0 36px; font-size: .8rem; color: var(--text-heading);
+}
+.app-topbar .search-box i { position: absolute; left: 13px; top: 11px; color: var(--text-muted); font-size: .8rem; }
+.app-topbar .bell { position: relative; width: 38px; height: 38px; border-radius: 50%; background-color: var(--app-bg); display: grid; place-items: center; color: var(--text-body); }
+.app-topbar .bell .dot { position: absolute; top: 3px; right: 4px; width: 9px; height: 9px; border-radius: 50%; background-color: var(--red); border: 2px solid #fff; }
+
+.sidebar-toggle { display: none; background: none; border: 0; font-size: 1.15rem; color: var(--navy-900); }
+
+.app-content { padding: 30px 32px 56px; }
+
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+.page-head h1 { font-size: 1.6rem; }
+.page-head .sub { font-size: .82rem; color: var(--text-body); margin-top: 6px; }
+
+/* ---------------- Avatars ---------------- */
+.avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-weight: 700; flex-shrink: 0; }
+.avatar-sm { width: 32px; height: 32px; font-size: .68rem; }
+.avatar-md { width: 38px; height: 38px; font-size: .78rem; }
+.avatar-lg { width: 46px; height: 46px; font-size: .92rem; }
+
+/* ---------------- Cards & stats ---------------- */
+.card { background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-title-sm { font-size: .95rem; font-weight: 700; color: var(--text-heading); }
+
+.stat-card { background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; height: 100%; }
+.stat-card .label { font-size: .74rem; color: var(--text-body); }
+.stat-card .value { font-size: 1.85rem; font-weight: 800; color: var(--text-heading); line-height: 1.2; margin-top: 4px; }
+.stat-card .delta { font-size: .72rem; display: flex; align-items: center; gap: 7px; margin-top: 8px; }
+.stat-card .delta .pip { width: 6px; height: 6px; border-radius: 50%; }
+.stat-card.edge-left { border-left: 4px solid var(--border); }
+
+/* ---------------- Status pills ---------------- */
+.pill { display: inline-block; padding: 5px 11px; border-radius: 100px; font-size: .66rem; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
+.pill-ok    { background-color: var(--green-tint); color: var(--green-dark); }
+.pill-warn  { background-color: var(--gold-tint);  color: var(--amber); }
+.pill-bad   { background-color: var(--red-tint);   color: var(--red); }
+.pill-info  { background-color: var(--blue-tint);  color: #1D4F8F; }
+.pill-muted { background-color: #EDEFF2;           color: var(--text-body); }
+
+/* ---------------- Filter chips [W3Schools, [s.a.]] ---------------- */
+.chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.chip {
+    padding: 8px 17px; border-radius: 100px; border: 1px solid var(--border);
+    background-color: var(--surface); color: var(--text-body);
+    font-size: .78rem; transition: var(--speed);
+}
+.chip:hover { border-color: var(--navy-900); color: var(--navy-900); }
+.chip.active { background-color: var(--navy-900); border-color: var(--navy-900); color: #fff; font-weight: 600; }
+
+/* ---------------- Data tables ---------------- */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead th {
+    background-color: #F7F9FC; border-bottom: 1px solid var(--border);
+    padding: 14px 16px; text-align: left;
+    font-size: .655rem; font-weight: 700; letter-spacing: .4px;
+    text-transform: uppercase; color: var(--text-body); white-space: nowrap;
+}
+.data-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: .8rem; vertical-align: middle; color: var(--text-heading); }
+.data-table tbody tr:nth-child(even) { background-color: var(--surface-alt); }
+.data-table tbody tr:hover { background-color: #F1F5FC; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table .t-strong { font-weight: 600; }
+.data-table .t-sub { font-size: .7rem; color: var(--text-muted); display: block; }
+
+.table-wrap { overflow-x: auto; }
+
+/* ---------------- Master / detail ---------------- */
+.list-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 18px; border-bottom: 1px solid var(--border);
+    transition: background-color var(--speed); position: relative;
+}
+.list-row:hover { background-color: var(--surface-alt); }
+.list-row.selected { background-color: #F1F5FC; }
+.list-row.selected::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background-color: var(--navy-900); }
+.list-row:last-child { border-bottom: 0; }
+.list-row .r-title { font-size: .82rem; font-weight: 600; color: var(--text-heading); display: block; }
+.list-row .r-sub { font-size: .7rem; color: var(--text-muted); }
+
+/* ---------------- Progress bars ---------------- */
+.pbar { height: 8px; background-color: #EDF0F5; border-radius: 4px; overflow: hidden; }
+.pbar > i { display: block; height: 100%; border-radius: 4px; background-color: var(--green); transition: width .4s; }
+
+/* ---------------- Notes ---------------- */
+.note { border-radius: 8px; padding: 14px 18px; font-size: .78rem; font-weight: 600; line-height: 1.6; }
+.note-info { background-color: var(--blue-tint);  border: 1px solid #B9CDE8; color: #1D4F8F; }
+.note-warn { background-color: var(--amber-tint); border: 1px solid #EBD9A8; color: #8A6410; }
+.note-ok   { background-color: #EAF7EF;           border: 1px solid #A9DCBE; color: var(--green-dark); }
+.note-bad  { background-color: var(--red-tint);   border: 1px solid #E9BDB6; color: #8A2B22; }
+
+/* ---------------- Buttons ---------------- */
+.btn-ovl        { background-color: var(--navy-900); color: #fff; font-weight: 600; font-size: .8rem; padding: 10px 20px; border-radius: 6px; border: 0; transition: var(--speed); }
+.btn-ovl:hover  { background-color: var(--navy-600); color: #fff; }
+.btn-ovl-ghost  { background-color: #fff; color: var(--navy-900); border: 1px solid var(--border); font-weight: 600; font-size: .8rem; padding: 10px 20px; border-radius: 6px; transition: var(--speed); }
+.btn-ovl-ghost:hover { background-color: var(--app-bg); color: var(--navy-900); }
+.btn-ovl-green  { background-color: var(--green); color: #fff; font-weight: 600; font-size: .8rem; padding: 10px 20px; border-radius: 6px; border: 0; }
+.btn-ovl-green:hover { background-color: #1c9350; color: #fff; }
+.btn-ovl-red    { background-color: #fff; color: var(--red); border: 1px solid #E9BDB6; font-weight: 600; font-size: .8rem; padding: 10px 20px; border-radius: 6px; }
+.btn-ovl-red:hover { background-color: var(--red-tint); color: var(--red); }
+.btn-sm-ovl     { padding: 7px 15px; font-size: .74rem; }
+
+/* ---------------- Forms ---------------- */
+.form-label { font-size: .76rem; font-weight: 600; color: var(--text-heading); margin-bottom: 7px; }
+.form-control, .form-select {
+    border: 1px solid var(--border); border-radius: 6px; padding: 11px 14px;
+    font-size: .82rem; color: var(--text-heading);
+}
+.form-control:focus, .form-select:focus { border-color: var(--navy-900); box-shadow: 0 0 0 3px rgba(15,30,58,.07); }
+.form-control.input-validation-error, .form-select.input-validation-error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(192,57,43,.08); }
+
+/* ---------------- Bar chart ---------------- */
+.chart { display: flex; align-items: flex-end; gap: 10px; height: 190px; padding-top: 10px; }
+.chart .bar { flex: 1; background-color: #2C4A7A; border-radius: 4px 4px 0 0; transition: var(--speed); position: relative; }
+.chart .bar.gold { background-color: var(--gold); }
+.chart .bar:hover { opacity: .82; }
+.chart-axis { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 0; }
+.chart-axis span { flex: 1; text-align: center; font-size: .66rem; color: var(--text-muted); }
+
+/* ---------------- Incident lifecycle tracker [Shadeed, 2021] ---------------- */
+.lifecycle { display: flex; align-items: center; margin: 14px 0 8px; }
+.lifecycle .lc-node { width: 14px; height: 14px; border-radius: 50%; background-color: #E3E7ED; flex-shrink: 0; }
+.lifecycle .lc-node.done { background-color: var(--green); }
+.lifecycle .lc-node.current { background-color: var(--navy-900); box-shadow: 0 0 0 4px rgba(15,30,58,.12); }
+.lifecycle .lc-line { flex: 1; height: 2px; background-color: #E3E7ED; }
+.lifecycle .lc-line.done { background-color: var(--green); }
+
+/* ---------------- Roster grid ---------------- */
+.roster-cell { border-radius: 6px; padding: 11px 6px; text-align: center; font-size: .7rem; font-weight: 600; border: 1px solid transparent; }
+.rc-day   { background-color: var(--green-tint); color: var(--green-dark); border-color: var(--green); }
+.rc-night { background-color: var(--blue-tint);  color: #1D4F8F;           border-color: #3A5C8F; }
+.rc-rest  { background-color: #F0F2F6;           color: #6B7280;           border-color: #C3CCDC; }
+.rc-leave { background-color: var(--gold-tint);  color: #8A6410;           border-color: var(--amber); }
+
+/* ---------------- Timeline ---------------- */
+.timeline { list-style: none; padding-left: 26px; position: relative; }
+.timeline li { position: relative; padding-bottom: 22px; }
+.timeline li::before { content: ""; position: absolute; left: -26px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background-color: var(--green); }
+.timeline li.pending::before { background-color: var(--amber); }
+.timeline li::after { content: ""; position: absolute; left: -21px; top: 19px; bottom: 0; width: 1.5px; background-color: #D9E0EA; }
+.timeline li:last-child::after { display: none; }
+
+/* ---------------- Staff mobile application ---------------- */
+.phone-shell { max-width: 420px; margin: 0 auto; background-color: var(--app-bg); min-height: 100vh; position: relative; padding-bottom: 84px; }
+.phone-status { background-color: var(--navy-900); color: #fff; font-size: .7rem; display: flex; justify-content: space-between; padding: 12px 22px; }
+.phone-appbar { background-color: var(--navy-900); color: #fff; padding: 14px 20px 18px; }
+.phone-appbar h1 { color: #fff; font-size: 1.05rem; }
+.phone-appbar .sub { color: #8FA0BE; font-size: .7rem; margin-top: 3px; }
+.phone-body { padding: 20px; }
+
+.phone-tabs {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 420px; background-color: #fff;
+    border-top: 1px solid var(--border); display: flex; z-index: 1050;
+}
+.phone-tabs a { flex: 1; text-align: center; padding: 12px 0 14px; color: var(--text-muted); font-size: .66rem; }
+.phone-tabs a i { display: block; font-size: 1rem; margin-bottom: 5px; color: #B9C1CE; }
+.phone-tabs a.active { color: var(--navy-900); font-weight: 600; }
+.phone-tabs a.active i { color: var(--navy-900); }
+
+.severity-chip { padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border); background-color: #fff; font-size: .78rem; font-weight: 600; color: var(--text-body); }
+.severity-chip.on-low   { background-color: var(--green); border-color: var(--green); color: #fff; }
+.severity-chip.on-med   { background-color: var(--amber); border-color: var(--amber); color: #fff; }
+.severity-chip.on-high  { background-color: var(--red);   border-color: var(--red);   color: #fff; }
+.severity-chip.on-fatal { background-color: #7B1E1E;      border-color: #7B1E1E;      color: #fff; }
+
+.photo-tile { height: 92px; border-radius: 8px; background: linear-gradient(118deg, #2C4A7A, #4B6FA6); position: relative; }
+.photo-add  { height: 92px; border-radius: 8px; border: 2px dashed #B9C4D6; background-color: #F7F9FC; display: grid; place-items: center; color: var(--navy-900); font-size: .7rem; font-weight: 600; }
+
+/* ---------------- Login ---------------- */
+.login-split { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+.login-brand { background: linear-gradient(118deg, var(--navy-900), var(--navy-600)); color: #fff; padding: 60px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+.login-brand::before { content: ""; position: absolute; width: 520px; height: 520px; border-radius: 50%; right: -160px; top: -60px; background-color: rgba(212,165,68,.10); }
+.login-brand h2 { color: #fff; font-size: 2.5rem; line-height: 1.15; position: relative; }
+.login-form { display: flex; flex-direction: column; justify-content: center; padding: 60px; background-color: #fff; }
+.login-form .inner { width: 100%; max-width: 440px; margin: 0 auto; }
+
+/* ---------------- Responsive [W3Schools, [s.a.]] ---------------- */
+@media (max-width: 1200px) {
+    .app-sidebar { transform: translateX(-100%); }
+    .app-sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+    .app-main { margin-left: 0; }
+    .sidebar-toggle { display: inline-block; }
+    .app-topbar { padding: 0 20px; }
+    .app-content { padding: 22px 20px 48px; }
+}
+
+@media (max-width: 992px) {
+    .login-split { grid-template-columns: 1fr; }
+    .login-brand { display: none; }
+    .login-form { padding: 40px 24px; }
+}
+
+@media (max-width: 640px) {
+    .page-head h1 { font-size: 1.3rem; }
+    .app-topbar .search-box { display: none; }
+    .stat-card .value { font-size: 1.5rem; }
+}
+
+/* Custom scrollbar [W3Schools, [s.a.]] */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
+
+/*
+    Reference List:
+        - Shadeed, A. 2021. Building A Stepper Component. Ishadeed.com. [blog] 31 August. Available at: <https://ishadeed.com/article/stepper-component-html-css/> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. Bootstrap 5 Cards. [online]. Available at: <https://www.w3schools.com/bootstrap5/bootstrap_cards.php> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. Bootstrap 5 Forms. [online]. Available at: <https://www.w3schools.com/bootstrap5/bootstrap_forms.php> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. Bootstrap 5 Tables. [online]. Available at: <https://www.w3schools.com/bootstrap5/bootstrap_tables.php> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. CSS :root Pseudo-class. [online]. Available at: <https://www.w3schools.com/cssref/sel_root.asp> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. CSS Media Queries. [online]. Available at: <https://www.w3schools.com/css/css3_mediaqueries.asp> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. How To Create a Side Navigation Menu. [online]. Available at: <https://www.w3schools.com/howto/howto_js_sidenav.asp> [Accessed 14 August 2026].
+        - W3Schools. [s.a.]. How To Create a Fixed Sidebar. [online]. Available at: <https://www.w3schools.com/howto/howto_css_fixed_sidebar.asp> [Accessed 14 August 2026].
+*/
