@@ -1,0 +1,100 @@
+﻿@model OverlookedConnect.PublicWeb.Models.JobApplicationModel
+@{
+    ViewData["Title"] = "Application Form";
+}
+
+<div class="page-hero">
+    <div class="container">
+        <span class="eyebrow">CAREERS AT OVERLOOKED</span>
+        <h1>Application form</h1>
+        <div class="breadcrumb-trail">@Model.Position &middot; Overlooked Group</div>
+    </div>
+</div>
+
+<div class="container py-5" style="max-width: 900px;">
+    <div class="card p-4 p-md-5">
+        <form asp-action="CareersApply" method="post" enctype="multipart/form-data" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Position" />
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FullName" class="form-label">Full name *</label>
+                    <input asp-for="FullName" class="form-control" placeholder="As it appears on your ID" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="IdNumber" class="form-label">ID / passport number *</label>
+                    <input asp-for="IdNumber" class="form-control" placeholder="e.g. 9204125012083" />
+                    <span asp-validation-for="IdNumber" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label">Email address *</label>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.co.za" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Phone" class="form-label">Contact number *</label>
+                    <input asp-for="Phone" class="form-control" placeholder="082 000 0000" />
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Qualification" class="form-label">Highest qualification *</label>
+                    <select asp-for="Qualification" class="form-select">
+                        <option value="">Select...</option>
+                        <option>Grade 12 / Matric</option>
+                        <option>Trade Certificate</option>
+                        <option>Diploma</option>
+                        <option>Bachelor's Degree</option>
+                        <option>Honours Degree</option>
+                        <option>Postgraduate</option>
+                    </select>
+                    <span asp-validation-for="Qualification" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="YearsExperience" class="form-label">Years of relevant experience *</label>
+                    <select asp-for="YearsExperience" class="form-select">
+                        <option value="">Select...</option>
+                        <option>0&ndash;1 years</option>
+                        <option>2&ndash;4 years</option>
+                        <option>5&ndash;7 years</option>
+                        <option>8+ years</option>
+                    </select>
+                    <span asp-validation-for="YearsExperience" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Upload your CV *</label>
+                <div class="dropzone">
+                    <i class="fas fa-cloud-arrow-up mb-2 d-block" style="font-size:1.3rem;"></i>
+                    Drag and drop, or browse &mdash; PDF only, maximum 5 MB
+                    <input asp-for="ResumeFile" type="file" accept=".pdf" />
+                </div>
+                <span asp-validation-for="ResumeFile" class="text-danger d-block small"></span>
+            </div>
+
+            <div class="form-check mb-4">
+                <input asp-for="PopiaConsent" class="form-check-input" id="PopiaConsent" />
+                <label asp-for="PopiaConsent" class="form-check-label small" for="PopiaConsent">
+                    I consent to OVL processing my personal information for recruitment purposes under POPIA.
+                </label>
+                <span asp-validation-for="PopiaConsent" class="text-danger d-block small"></span>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-navy">Submit application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,8 +1,162 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
+    ViewData["MetaDescription"] = "Overlooked Group - Powering Sustainable Mining in Mpumalanga";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="hero-section">
+    <div class="container">
+        <span class="hero-badge">100% BLACK-OWNED &middot; FOUNDED 2016</span>
+        <h1>Powering South Africa with responsible coal.</h1>
+        <p class="lead">Overlooked Group operates five collieries across Mpumalanga, delivering 9.7 million tons per annum to Eskom and export markets &mdash; while building the SMME supply base that sustains our communities.</p>
+        <div>
+            <a asp-action="Operations" class="btn btn-gold me-2">Explore our operations</a>
+            <a asp-action="Suppliers" class="btn btn-outline-light">Register as a supplier</a>
+        </div>
+    </div>
+</div>
+
+<div class="stat-strip">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <h2>9.7 Mt</h2>
+                    <p>Run of Mine capacity p.a.</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <h2>248</h2>
+                    <p>Permanent employees</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <h2>5</h2>
+                    <p>Business units</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <h2>Level 1</h2>
+                    <p>B-BBEE contributor</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <span class="pill pill-gold mb-2">OUR OPERATIONS</span>
+    <h2 class="mt-2 mb-2">Two asset clusters. Five collieries.</h2>
+    <p class="text-muted mb-4" style="max-width:620px;">Our Mpumalanga complexes supply domestic critical infrastructure alongside competitive international export markets.</p>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-photo">
+                    <span class="card-photo-badge">4.1 Mt ROM p.a.</span>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-1">Tswelopele Operations</h4>
+                    <p class="text-muted small mb-3">Overlooked Colliery</p>
+                    <a asp-action="Operations" class="card-link-arrow">View operation &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-photo">
+                    <span class="card-photo-badge">5.6 Mt ROM p.a.</span>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-1">Katlego Operations</h4>
+                    <p class="text-muted small mb-3">Dorstfontein Opencast &middot; Dorstfontein West Underground &middot; Forzando North &middot; Forzando South</p>
+                    <a asp-action="Operations" class="card-link-arrow">View operation &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-5" style="background: linear-gradient(135deg, var(--navy-800), var(--navy-700));">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="pill pill-green mb-2">SUSTAINABILITY &amp; ESG</span>
+                <h2 class="mt-2 mb-3" style="color:#FFFFFF;">Mining that leaves more than it takes.</h2>
+                <p class="mb-4" style="color:rgba(255,255,255,0.75);">Rehabilitation, water stewardship and community investment are reported quarterly and audited annually against our ESG framework.</p>
+                <a asp-action="Sustainability" class="btn" style="background-color:var(--green); color:#fff; font-weight:700; padding:0.65rem 1.6rem; border-radius:6px;">Read the 2026 ESG report</a>
+            </div>
+            <div class="col-lg-6">
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center p-3" style="background-color:var(--navy-900); border-left:3px solid var(--green); border-radius:6px;">
+                        <div>
+                            <h3 class="mb-0" style="color:#fff;">R 48m</h3>
+                            <small style="color:rgba(255,255,255,0.6);">Community investment 2025</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-3" style="background-color:var(--navy-900); border-left:3px solid var(--green); border-radius:6px;">
+                        <div>
+                            <h3 class="mb-0" style="color:#fff;">92%</h3>
+                            <small style="color:rgba(255,255,255,0.6);">Land rehabilitation on track</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center p-3" style="background-color:var(--navy-900); border-left:3px solid var(--green); border-radius:6px;">
+                        <div>
+                            <h3 class="mb-0" style="color:#fff;">0.11</h3>
+                            <small style="color:rgba(255,255,255,0.6);">Lost-time injury frequency rate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="cta-banner d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h4>Are you an SMME looking to supply Overlooked?</h4>
+            <p class="mb-0">Register online, upload your compliance documents and track your application in real time. No site visit required.</p>
+        </div>
+        <a asp-action="Suppliers" class="btn btn-navy">Start supplier registration</a>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <span class="pill pill-gold mb-2">NEWSROOM</span>
+    <h2 class="mt-2 mb-4">Latest from Overlooked</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-photo"></div>
+                <div class="card-body">
+                    <span class="pill pill-navy mb-2">OPERATIONS</span>
+                    <h5 class="mt-2">Forzando South reaches 1Mt milestone</h5>
+                    <p class="text-muted small mb-0">12 July 2026</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-photo"></div>
+                <div class="card-body">
+                    <span class="pill pill-navy mb-2">COMMUNITY</span>
+                    <h5 class="mt-2">New skills centre opens in Bethal</h5>
+                    <p class="text-muted small mb-0">28 June 2026</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-photo"></div>
+                <div class="card-body">
+                    <span class="pill pill-navy mb-2">GOVERNANCE</span>
+                    <h5 class="mt-2">Overlooked achieves Level 1 B-BBEE status</h5>
+                    <p class="text-muted small mb-0">03 June 2026</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

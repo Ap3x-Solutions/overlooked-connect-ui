@@ -1,0 +1,163 @@
+﻿@model OverlookedConnect.PublicWeb.Models.SupplierRegistrationModel
+@{
+    ViewData["Title"] = "Register as a Supplier";
+}
+
+<div class="page-hero">
+    <div class="container">
+        <span class="eyebrow">SUPPLIER &amp; SMME PORTAL</span>
+        <h1>Register as a supplier</h1>
+        <div class="breadcrumb-trail"><a asp-action="Index">Home</a> &rsaquo; Suppliers &rsaquo; Register</div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="stepper">
+        <div class="step active">
+            <div class="step-circle">1</div>
+            <div class="step-label">Register account</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-circle">2</div>
+            <div class="step-label">Upload documents</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Track status</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-circle">4</div>
+            <div class="step-label">Approved</div>
+        </div>
+    </div>
+
+    <div class="card mx-auto" style="max-width: 860px;">
+        <div class="card-body p-4 p-md-5">
+            <form asp-action="SubmitSupplier" method="post" enctype="multipart/form-data" novalidate>
+                @Html.AntiForgeryToken()
+
+                <h5 class="mb-1">Company details</h5>
+                <p class="text-muted small mb-4">All fields marked with an asterisk are required. Your details are processed under POPIA and shared only with OVL procurement.</p>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="RegisteredCompanyName" class="form-label">Registered company name *</label>
+                        <input asp-for="RegisteredCompanyName" class="form-control" placeholder="e.g. Bethal Logistics CC" />
+                        <span asp-validation-for="RegisteredCompanyName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CompanyRegistrationNumber" class="form-label">Company registration number *</label>
+                        <input asp-for="CompanyRegistrationNumber" class="form-control" placeholder="2019/447281/23" />
+                        <span asp-validation-for="CompanyRegistrationNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TradingName" class="form-label">Trading name</label>
+                        <input asp-for="TradingName" class="form-control" placeholder="Bethal Logistics" />
+                        <span asp-validation-for="TradingName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="VatNumber" class="form-label">VAT number</label>
+                        <input asp-for="VatNumber" class="form-control" placeholder="4820199384" />
+                        <span asp-validation-for="VatNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-1">
+                        <label asp-for="BbbeeLevel" class="form-label">B-BBEE level *</label>
+                        <select asp-for="BbbeeLevel" class="form-select">
+                            <option value="">-- Select level --</option>
+                            <option>Level 1 &mdash; 135% procurement recognition</option>
+                            <option>Level 2 &mdash; 125% procurement recognition</option>
+                            <option>Level 3 &mdash; 110% procurement recognition</option>
+                            <option>Level 4 &mdash; 100% procurement recognition</option>
+                            <option>Level 5</option>
+                            <option>Level 6</option>
+                            <option>Level 7</option>
+                            <option>Level 8</option>
+                            <option>Non-compliant</option>
+                        </select>
+                        <small class="text-muted">Verification certificate required in the next step</small>
+                        <span asp-validation-for="BbbeeLevel" class="text-danger small d-block"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NumberOfEmployees" class="form-label">Number of employees *</label>
+                        <input asp-for="NumberOfEmployees" type="number" min="1" class="form-control" placeholder="24" />
+                        <span asp-validation-for="NumberOfEmployees" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <hr class="my-4" style="border-color:var(--border-light);" />
+
+                <h5 class="mb-3">Contact person</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ContactFullName" class="form-label">Full name *</label>
+                        <input asp-for="ContactFullName" class="form-control" placeholder="Thandiwe Mokoena" />
+                        <span asp-validation-for="ContactFullName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ContactEmail" class="form-label">Email address *</label>
+                        <input asp-for="ContactEmail" class="form-control" placeholder="thandiwe@bethallogistics.co.za" />
+                        <span asp-validation-for="ContactEmail" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ContactNumber" class="form-label">Contact number *</label>
+                        <input asp-for="ContactNumber" class="form-control" placeholder="082 445 1102" />
+                        <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Province" class="form-label">Province *</label>
+                        <select asp-for="Province" class="form-select">
+                            <option value="">-- Select province --</option>
+                            <option>Mpumalanga</option>
+                            <option>Gauteng</option>
+                            <option>Limpopo</option>
+                            <option>KwaZulu-Natal</option>
+                            <option>North West</option>
+                            <option>Free State</option>
+                            <option>Eastern Cape</option>
+                            <option>Western Cape</option>
+                            <option>Northern Cape</option>
+                        </select>
+                        <span asp-validation-for="Province" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label asp-for="GoodsServicesOffered" class="form-label">Goods / services offered *</label>
+                        <textarea asp-for="GoodsServicesOffered" class="form-control" rows="3" placeholder="Bulk haulage, site logistics and plant hire for opencast operations."></textarea>
+                        <span asp-validation-for="GoodsServicesOffered" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <hr class="my-4" style="border-color:var(--border-light);" />
+
+                <h5 class="mb-3">Compliance documents</h5>
+                <div class="dropzone mb-1">
+                    <input asp-for="ComplianceDocs" type="file" accept=".pdf,.zip" />
+                    <i class="fas fa-cloud-arrow-up mb-2" style="font-size:1.4rem;"></i>
+                    <div>Upload a single PDF or ZIP containing your B-BBEE certificate, tax clearance and CIPC documents.</div>
+                </div>
+                <span asp-validation-for="ComplianceDocs" class="text-danger small d-block mb-3"></span>
+
+                <div class="form-check mb-4 mt-3">
+                    <input asp-for="PopiaConsent" class="form-check-input" id="PopiaConsent" />
+                    <label asp-for="PopiaConsent" class="form-check-label small" for="PopiaConsent">
+                        I confirm the information above is accurate and consent to OVL processing it under POPIA.
+                    </label>
+                    <span asp-validation-for="PopiaConsent" class="text-danger d-block small"></span>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <button type="submit" class="btn btn-navy">Continue to documents &rarr;</button>
+                    <a asp-action="Index" class="text-muted small">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <p class="text-center text-muted small mt-4 mb-0">Need help? Call procurement on 013 590 4400 or email suppliers@overlookedgroup.co.za</p>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

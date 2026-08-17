@@ -1,0 +1,125 @@
+﻿@model OverlookedConnect.PublicWeb.Models.ContactEnquiryModel
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<div class="page-hero">
+    <div class="container">
+        <span class="eyebrow">CONTACT &amp; INVEST</span>
+        <h1>Get in touch</h1>
+        <div class="breadcrumb-trail"><a asp-action="Index">Home</a> &rsaquo; Contact</div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <h5 class="mb-1">Send us an enquiry</h5>
+                    <p class="text-muted small mb-3">Select a reason so your message reaches the right department automatically.</p>
+
+                    <form asp-action="SubmitContact" method="post" novalidate id="contactForm">
+                        @Html.AntiForgeryToken()
+
+                        <label class="form-label">Reason for enquiry *</label>
+                        <div class="reason-tabs" role="radiogroup">
+                            @{
+                                var reasons = new[] { "Investment", "Partnership", "Procurement", "Media", "General" };
+                            }
+                            @foreach (var r in reasons)
+                            {
+                                <input type="radio" class="btn-check" name="Reason" id="reason-@r" value="@r" autocomplete="off" @(Model?.Reason == r || (Model == null && r == "Investment") ? "checked" : "") />
+                                <label class="reason-pill" for="reason-@r">@r</label>
+                            }
+                        </div>
+                        <span asp-validation-for="Reason" class="text-danger small d-block mb-2"></span>
+
+                        <div class="info-note" id="reasonNote">
+                            Investment enquiries route to the Office of the CFO &mdash; typical response within 2 business days.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">Full name *</label>
+                                <input asp-for="Name" class="form-control" placeholder="Your name" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Organisation" class="form-label">Organisation</label>
+                                <input asp-for="Organisation" class="form-control" placeholder="Company or fund" />
+                                <span asp-validation-for="Organisation" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label">Email address *</label>
+                                <input asp-for="Email" class="form-control" placeholder="you@example.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ContactNumber" class="form-label">Contact number</label>
+                                <input asp-for="ContactNumber" class="form-control" placeholder="+27 82 000 0000" />
+                                <span asp-validation-for="ContactNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label asp-for="Message" class="form-label">Message *</label>
+                                <textarea asp-for="Message" class="form-control" rows="4" placeholder="Tell us briefly what you would like to discuss..."></textarea>
+                                <span asp-validation-for="Message" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-navy">Send enquiry</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-3">Corporate office</h5>
+                    <p class="mb-1">Overlooked Group (Pty) Ltd</p>
+                    <p class="mb-1">1st Floor, Menlyn Corporate Park</p>
+                    <p class="mb-3">175 Corobay Avenue, Pretoria, 0181</p>
+                    <hr style="border-color:var(--border-light);" />
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted small">Switchboard</span>
+                        <strong class="small">+27 12 460 4400</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted small">Investor relations</span>
+                        <strong class="small">invest@overlookedgroup.co.za</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted small">Suppliers</span>
+                        <strong class="small">suppliers@overlookedgroup.co.za</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-placeholder">
+                <span class="map-pin"></span>
+                Menlyn, Pretoria
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var notes = {
+                Investment: "Investment enquiries route to the Office of the CFO â€” typical response within 2 business days.",
+                Partnership: "Partnership enquiries route to Business Development â€” typical response within 2 business days.",
+                Procurement: "Procurement enquiries route to the Supply Chain team â€” typical response within 3 business days.",
+                Media: "Media enquiries route to Corporate Communications â€” typical response within 1 business day.",
+                General: "General enquiries route to the Executive Desk â€” typical response within 2 business days."
+            };
+            document.querySelectorAll('input[name="Reason"]').forEach(function (input) {
+                input.addEventListener('change', function () {
+                    document.getElementById('reasonNote').textContent = notes[this.value] || "";
+                });
+            });
+        })();
+    </script>
+}
