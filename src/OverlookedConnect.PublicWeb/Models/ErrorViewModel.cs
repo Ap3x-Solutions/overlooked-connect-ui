@@ -1,4 +1,4 @@
-namespace OverlookedConnect.PublicWeb.Models;
+﻿namespace OverlookedConnect.PublicWeb.Models;
 
 public class ErrorViewModel
 {

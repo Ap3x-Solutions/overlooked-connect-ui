@@ -1,0 +1,222 @@
+﻿@{
+    ViewData["Title"] = "Sustainability & ESG";
+}
+
+<div class="page-hero">
+    <div class="container">
+        <span class="eyebrow">SUSTAINABILITY &amp; ESG</span>
+        <h1>Mining that leaves more than it takes</h1>
+        <div class="breadcrumb-trail"><a asp-action="Index">Home</a> &rsaquo; Sustainability &amp; ESG</div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <ul class="nav pill-tabs" id="esgTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="env-tab" data-bs-toggle="tab" data-bs-target="#env" type="button" role="tab">Environment</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="social-tab" data-bs-toggle="tab" data-bs-target="#social" type="button" role="tab">Social</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="gov-tab" data-bs-toggle="tab" data-bs-target="#gov" type="button" role="tab">Governance</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">Reports</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="esgTabsContent">
+        <div class="tab-pane fade show active" id="env" role="tabpanel">
+            <div class="row g-4 mb-5">
+                <div class="col-md-3 col-6">
+                    <div class="stat-card accent-green">
+                        <h2>92%</h2>
+                        <p>Land rehabilitation on track</p>
+                        <small>of disturbed land under active rehabilitation</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-card">
+                        <h2>R 48m</h2>
+                        <p>Community investment 2025</p>
+                        <small>across skills, health and enterprise development</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-card accent-green">
+                        <h2>0.11</h2>
+                        <p>Lost-time injury frequency rate</p>
+                        <small>below the 0.15 internal target</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-card accent-green">
+                        <h2>2.1 Ml</h2>
+                        <p>Water recycled per month</p>
+                        <small>68% of total process water demand</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="mb-3">Rehabilitation progress by site</h5>
+                            <div class="rehab-row">
+                                <span>Overlooked Colliery</span>
+                                <div class="rehab-track"><div class="rehab-fill" style="width:96%;"></div></div>
+                                <strong style="color:var(--green);">96%</strong>
+                            </div>
+                            <div class="rehab-row">
+                                <span>Dorstfontein Opencast</span>
+                                <div class="rehab-track"><div class="rehab-fill" style="width:88%;"></div></div>
+                                <strong style="color:var(--green);">88%</strong>
+                            </div>
+                            <div class="rehab-row">
+                                <span>Dorstfontein West</span>
+                                <div class="rehab-track"><div class="rehab-fill" style="width:94%;"></div></div>
+                                <strong style="color:var(--green);">94%</strong>
+                            </div>
+                            <div class="rehab-row">
+                                <span>Forzando North</span>
+                                <div class="rehab-track"><div class="rehab-fill" style="width:91%;"></div></div>
+                                <strong style="color:var(--green);">91%</strong>
+                            </div>
+                            <div class="rehab-row mb-0">
+                                <span>Forzando South</span>
+                                <div class="rehab-track"><div class="rehab-fill" style="width:89%;"></div></div>
+                                <strong style="color:var(--green);">89%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="mb-3">Community &amp; CSR projects</h5>
+                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3" style="border-bottom:1px solid var(--border-light);">
+                                <div>
+                                    <strong>Bethal Skills Centre</strong>
+                                    <div class="text-muted small">R 1.2m &middot; 240 learners</div>
+                                </div>
+                                <span class="pill pill-gold">In progress</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3" style="border-bottom:1px solid var(--border-light);">
+                                <div>
+                                    <strong>Emalahleni Clinic upgrade</strong>
+                                    <div class="text-muted small">R 860k &middot; 4 200 patients p.a.</div>
+                                </div>
+                                <span class="pill pill-green">Complete</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3" style="border-bottom:1px solid var(--border-light);">
+                                <div>
+                                    <strong>SMME incubator</strong>
+                                    <div class="text-muted small">R 640k &middot; 18 businesses</div>
+                                </div>
+                                <span class="pill pill-gold">In progress</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-start mb-0">
+                                <div>
+                                    <strong>School feeding programme</strong>
+                                    <div class="text-muted small">R 380k &middot; 6 schools</div>
+                                </div>
+                                <span class="pill pill-green">Ongoing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="social" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100"><div class="card-body">
+                        <h5 class="mb-2">Community investment</h5>
+                        <p class="text-muted mb-0">Skills development, healthcare access and enterprise incubation across our host communities in Mpumalanga.</p>
+                    </div></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100"><div class="card-body">
+                        <h5 class="mb-2">Employee wellbeing</h5>
+                        <p class="text-muted mb-0">On-site clinics, wellness programmes and a confidential employee assistance line for all permanent staff.</p>
+                    </div></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100"><div class="card-body">
+                        <h5 class="mb-2">Local procurement</h5>
+                        <p class="text-muted mb-0">Preference given to Level 1-4 B-BBEE suppliers based in the districts surrounding our operations.</p>
+                    </div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="gov" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="callout"><h5 class="mb-2">Board Committees</h5><p class="text-muted mb-0">Audit &amp; Risk &middot; Social &amp; Ethics &middot; Remuneration &mdash; each meets quarterly.</p></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="callout"><h5 class="mb-2">Whistleblower Line</h5><p class="text-muted mb-0">0800 20 20 20, independently operated with anonymous reporting.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="reports" role="tabpanel">
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pdf-icon me-3">PDF</div>
+                            <div>
+                                <strong>2026 ESG Report</strong>
+                                <div class="text-muted small">Published July 2026 &middot; 68 pages</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">PDF &middot; 4.2 MB</span>
+                            <a href="#" class="card-link-arrow">Download &darr;</a>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pdf-icon me-3">PDF</div>
+                            <div>
+                                <strong>B-BBEE Verification Certificate</strong>
+                                <div class="text-muted small">Level 1 &middot; valid to 31 March 2027</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">PDF &middot; 320 KB</span>
+                            <a href="#" class="card-link-arrow">Download &darr;</a>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="pdf-icon me-3">PDF</div>
+                            <div>
+                                <strong>Mine Rehabilitation Plan</strong>
+                                <div class="text-muted small">Updated April 2026</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">PDF &middot; 2.8 MB</span>
+                            <a href="#" class="card-link-arrow">Download &darr;</a>
+                        </div>
+                    </div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="callout mt-2" style="background: linear-gradient(120deg, var(--green), #16924a); color:#fff; border:none;">
+        <span class="pill" style="background-color:rgba(255,255,255,0.2); color:#fff;">Our 2030 commitment</span>
+        <h5 class="mt-3 mb-0" style="color:#fff;">100% of disturbed land under active rehabilitation, and R 100m cumulative community investment.</h5>
+    </div>
+</div>
