@@ -1,0 +1,35 @@
+name: UI CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test UI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore OverlookedConnect.UI.sln
+
+      - name: Build solution
+        run: dotnet build OverlookedConnect.UI.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test OverlookedConnect.UI.sln --configuration Release --no-build
