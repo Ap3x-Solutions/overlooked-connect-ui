@@ -1,78 +1,150 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
 
 /*
- This controller serves the Supplier & SMME Administration module (FR-05, US-07) for the
- Procurement role. It presents the review queue in a master-detail layout so that an officer can
- inspect an application and its compliance documents in one screen.
+ Supplier Review Queue (OVC-267, Figure 26).
 
- The business rule enforced in the live system is that a supplier application cannot be approved
- until every required compliance document carries a verified flag. In the sample data
- Bethal Logistics CC (Supplier #482, OVL-SUP-2026-0482) has three of five documents supplied and
- two verified, so the Approve action is unavailable until the outstanding documents are received.
+ The queue now reads live applications from GET /api/suppliers and drives the workflow through
+ POST /api/suppliers/{id}/review, /approve and /reject.
 
- This rule is the one the Repository and Dependency Injection pattern in Section 7.1 exists to make
- testable: because SupplierAdminService depends on ISupplierRepository rather than on a concrete
- data-access class, a unit test can substitute a fake repository and assert the rule without a database.
- */
+ Where the approval rule lives, and why it matters that it is not here:
+
+ The rule — a supplier cannot be approved until every required compliance document is verified — is
+ enforced by the API, on the Supplier entity. This controller only relays the API's decision
+ message. Putting the rule in this screen would mean the Android client or a direct API call could
+ bypass it, and the same rule would exist in two places to drift apart.
+
+ When the API is unreachable the screen falls back to the Task 1 demonstration data so the
+ prototype still renders, and says so in the banner.
+
+ Reference List:
+    - Fowler, M. 2003. Patterns of enterprise application architecture. Boston: Addison-Wesley.
+    - Microsoft Learn. [s.a.]. Make HTTP requests using IHttpClientFactory in ASP.NET Core. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/http-requests> [Accessed 5 September 2026].
+    - Microsoft Learn. [s.a.]. Handle requests with controllers in ASP.NET Core MVC. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions> [Accessed 5 September 2026].
+*/
 
 namespace OverlookedConnect.Internal.Controllers
 {
     public class SuppliersController : Controller
     {
-        /* GET: Suppliers/Index */
-        public IActionResult Index(int? id, string? filter)
-        {
-            var applications = DemoData.Suppliers.AsEnumerable();
+        private readonly OverlookedApiClient _api;
+        public SuppliersController(OverlookedApiClient api) => _api = api;
 
-            if (!string.IsNullOrWhiteSpace(filter) && filter != "All")
+        /* GET: Suppliers/Index */
+        public async Task<IActionResult> Index(int? id, string? filter)
+        {
+            List<SupplierApplication> list;
+            var live = true;
+
+            try
             {
-                applications = applications.Where(s => s.Status == filter);
+                /* Map the screen's filter labels onto the API's status values. */
+                var apiStatus = filter switch
+                {
+                    "Under review"  => "UnderReview",
+                    "Awaiting docs" => "Submitted",
+                    "Verified"      => "DocumentsVerified",
+                    "Approved"      => "Approved",
+                    _               => null
+                };
+
+                list = (await _api.GetSuppliersAsync(apiStatus)).Select(Map).ToList();
+            }
+            catch (Exception)
+            {
+                live = false;
+                var demo = DemoData.Suppliers.AsEnumerable();
+                if (!string.IsNullOrWhiteSpace(filter) && filter != "All")
+                    demo = demo.Where(s => s.Status == filter);
+                list = demo.ToList();
             }
 
-            var list = applications.ToList();
             var selected = list.FirstOrDefault(s => s.SupplierId == id) ?? list.FirstOrDefault();
 
             ViewBag.Filter = filter ?? "All";
+            ViewBag.LiveData = live;
+
+            if (!live)
+                TempData["SuccessMessage"] ??= "The API is not reachable — showing Task 1 demonstration data.";
 
             return View(new SupplierQueueViewModel { Applications = list, Selected = selected });
         }
 
-        /* POST: Suppliers/Approve */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Approve(int supplierId, string companyName)
+        /* POST: Suppliers/Review — Submitted or Rejected → UnderReview */
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Review(int supplierId)
         {
-            var supplier = DemoData.Suppliers.FirstOrDefault(s => s.SupplierId == supplierId);
-
-            /* Guard: mirrors the rule enforced by SupplierAdminService in Section 7.1. */
-            if (supplier != null && supplier.DocumentsVerified < supplier.DocumentsRequired)
-            {
-                TempData["SuccessMessage"] =
-                    $"{companyName} cannot be approved yet. {supplier.DocumentsRequired - supplier.DocumentsVerified} of {supplier.DocumentsRequired} compliance documents are still outstanding.";
-                return RedirectToAction("Index", new { id = supplierId });
-            }
-
-            TempData["SuccessMessage"] =
-                $"{companyName} approved as an OVL supplier. A vendor number has been issued and an audit entry written recording the status change.";
+            TempData["SuccessMessage"] = (await Call(() => _api.ReviewAsync(supplierId))).message;
             return RedirectToAction("Index", new { id = supplierId });
         }
 
-        /* POST: Suppliers/RequestDocuments */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        /* POST: Suppliers/Approve — refused by the API while any document is unverified */
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Approve(int supplierId, string? companyName)
+        {
+            TempData["SuccessMessage"] = (await Call(() => _api.ApproveAsync(supplierId))).message;
+            return RedirectToAction("Index", new { id = supplierId });
+        }
+
+        /* POST: Suppliers/Reject */
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reject(int supplierId, string? reason)
+        {
+            TempData["SuccessMessage"] = (await Call(() => _api.RejectAsync(supplierId, reason))).message;
+            return RedirectToAction("Index", new { id = supplierId });
+        }
+
+        /* POST: Suppliers/RequestDocuments — notification only, no state change on the API */
+        [HttpPost, ValidateAntiForgeryToken]
         public IActionResult RequestDocuments(int supplierId, string companyName)
         {
             TempData["SuccessMessage"] =
                 $"Outstanding document request sent to {companyName}. The applicant can upload through the public supplier portal.";
             return RedirectToAction("Index", new { id = supplierId });
         }
+
+        /* ---------------- helpers ---------------- */
+
+        private static async Task<(bool ok, string message)> Call(Func<Task<(bool ok, string message)>> action)
+        {
+            try { return await action(); }
+            catch (HttpRequestException)
+            {
+                return (false, "The API is not reachable. Start OverlookedConnect.Api and try again.");
+            }
+        }
+
+        /// <summary>Maps the API shape onto the view model the Task 1 screen already renders.</summary>
+        private static SupplierApplication Map(ApiSupplier s) => new()
+        {
+            SupplierId = s.SupplierId,
+            CompanyName = s.CompanyName,
+            Initials = string.Concat(s.CompanyName
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Take(2).Select(p => p[0])).ToUpperInvariant(),
+            AvatarColour = "#2C4A7A",
+            Reference = s.Reference,
+            RegistrationNumber = s.RegistrationNumber,
+            BbbeeLevel = $"Level {s.BbbeeLevel}",
+            DocumentsVerified = s.DocumentsVerified,
+            DocumentsRequired = s.DocumentsRequired,
+            Employees = s.EmployeeCount,
+            Province = s.Province ?? "",
+            Category = s.ServicesOffered ?? "",
+            Submitted = s.SubmittedAt.ToString("dd MMM yyyy"),
+            Status = s.Status switch
+            {
+                "UnderReview"       => "Under review",
+                "DocumentsVerified" => "Verified",
+                "Submitted"         => "Awaiting docs",
+                _                   => s.Status
+            },
+            Documents = s.Documents.Select(d => new ComplianceDocument
+            {
+                DocType = d.DocType,
+                Status = d.Status      /* Required, Pending, Verified or Rejected */
+            }).ToList()
+        };
     }
 }
-
-/*
-    Reference List:
-        - Fowler, M. 2003. Patterns of enterprise application architecture. Boston: Addison-Wesley.
-        - Microsoft Learn. [s.a.]. Dependency injection in ASP.NET Core. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection> [Accessed 14 August 2026].
-        - Microsoft Learn. [s.a.]. Enumerable.FirstOrDefault Method (System.Linq). [online]. Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.firstordefault> [Accessed 14 August 2026].
-*/

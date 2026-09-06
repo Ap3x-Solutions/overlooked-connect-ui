@@ -1,0 +1,61 @@
+@model StaffLoginModel
+@{
+    ViewData["Title"] = "Staff sign-in";
+}
+
+<section class="page-hero">
+    <div class="container">
+        <span class="eyebrow">OVERLOOKED CONNECT</span>
+        <h1>Staff sign-in</h1>
+        <p class="breadcrumb-trail">Home &rsaquo; Staff sign-in</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="card p-4 p-lg-5">
+                    <h2 class="h4 mb-2">Sign in to Overlooked Connect</h2>
+                    <p class="text-muted small mb-4">
+                        Use your OVL work account. You will be taken to the internal operations
+                        platform without signing in again.
+                    </p>
+
+                    <form asp-action="Login" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email address</label>
+                            <input asp-for="Email" class="form-control" placeholder="n.sithole@overlookedgroup.co.za" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">Password</label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="••••••••••••" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-2">Sign in</button>
+                    </form>
+
+                    <div class="alert alert-warning small mt-4 mb-0">
+                        Multi-factor authentication is enforced for all OVL work accounts.
+                        Suppliers sign in here too and are taken to their application status page.
+                    </div>
+                </div>
+
+                <p class="text-center text-muted small mt-3">
+                    <i class="fas fa-shield-halved me-1"></i>
+                    Protected by Microsoft Entra External ID
+                </p>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

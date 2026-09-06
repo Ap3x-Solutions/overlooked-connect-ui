@@ -1,5 +1,54 @@
-﻿@{
+@{
     ViewData["Title"] = "Careers";
+}
+
+
+@{
+    /* OVC-250 / OVC-267: vacancies come from GET /api/vacancies when the API is reachable.
+       The static listings below remain as the fallback so the page never breaks for a visitor. */
+    var liveVacancies = ViewBag.Vacancies as List<OverlookedConnect.PublicWeb.Services.ApiVacancy>;
+    var isLive = ViewBag.LiveVacancies == true && liveVacancies is { Count: > 0 };
+}
+
+@if (isLive)
+{
+    <section class="section">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h2 class="h3 mb-0">Current vacancies</h2>
+                <span class="badge bg-success">@liveVacancies!.Count open position(s)</span>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var v in liveVacancies!)
+                {
+                    <div class="col-md-6">
+                        <div class="card h-100 p-4">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h3 class="h5 mb-1">@v.Title</h3>
+                                <span class="badge bg-light text-dark">@v.EmploymentType</span>
+                            </div>
+                            <p class="text-muted small mb-3">@v.Department &middot; @v.Site</p>
+                            <p class="small">@v.Purpose</p>
+
+                            <ul class="small ps-3 mb-3">
+                                @foreach (var r in v.Requirements)
+                                {
+                                    <li>@r</li>
+                                }
+                            </ul>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">Closes @v.ClosingDate.ToString("dd MMM yyyy")</span>
+                                <a class="btn btn-primary btn-sm"
+                                   asp-action="CareersApply" asp-route-position="@v.Title">Apply</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
 }
 
 <div class="page-hero">
