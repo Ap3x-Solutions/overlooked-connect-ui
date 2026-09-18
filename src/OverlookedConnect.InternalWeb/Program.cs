@@ -1,30 +1,97 @@
+using OverlookedConnect.Internal.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ------------------------------------------------------------
+// MVC
+// ------------------------------------------------------------
+
 builder.Services.AddControllersWithViews();
 
-// Session services
+
+// ------------------------------------------------------------
+// SESSION
+// ------------------------------------------------------------
+
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout =
+        TimeSpan.FromMinutes(30);
+
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+
+    options.Cookie.Name =
+        ".OverlookedConnect.Internal.Session";
+
+    options.Cookie.SameSite =
+        SameSiteMode.Lax;
+
+    options.Cookie.SecurePolicy =
+        CookieSecurePolicy.SameAsRequest;
 });
+
+
+// ------------------------------------------------------------
+// OVERLOOKED CONNECT API
+// ------------------------------------------------------------
+
+var apiBaseUrl =
+    builder.Configuration["Api:BaseUrl"];
+
+if (string.IsNullOrWhiteSpace(apiBaseUrl))
+{
+    throw new InvalidOperationException(
+        "Api:BaseUrl is not configured.");
+}
+
+if (!apiBaseUrl.EndsWith('/'))
+{
+    apiBaseUrl += "/";
+}
+
+builder.Services.AddHttpClient<OverlookedApiClient>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri(apiBaseUrl);
+
+        client.Timeout =
+            TimeSpan.FromSeconds(30);
+
+        client.DefaultRequestHeaders.Accept.Clear();
+
+        client.DefaultRequestHeaders.Accept.Add(
+            new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue(
+                "application/json"));
+    });
+
+
+// ------------------------------------------------------------
+// APPLICATION
+// ------------------------------------------------------------
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+// ------------------------------------------------------------
+// ERROR HANDLING
+// ------------------------------------------------------------
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler(
+        "/Account/Error");
 
-    // The default HSTS value is 30 days.
-    // You may want to change this for production scenarios.
-    // See https://aka.ms/aspnetcore-hsts
     app.UseHsts();
 }
+
+
+// ------------------------------------------------------------
+// HTTP PIPELINE
+// ------------------------------------------------------------
 
 app.UseHttpsRedirection();
 
@@ -32,18 +99,18 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Enable session
 app.UseSession();
-
-// Keep existing authentication configuration
-app.UseAuthentication();
 
 app.UseAuthorization();
 
-// Default route
-// Opens the InternalWeb application on Account/Login
+
+// ------------------------------------------------------------
+// ROUTING
+// ------------------------------------------------------------
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern:
+        "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

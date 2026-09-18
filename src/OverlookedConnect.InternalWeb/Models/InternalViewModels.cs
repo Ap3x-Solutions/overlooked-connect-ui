@@ -15,29 +15,25 @@ using Microsoft.AspNetCore.Http;
 
 namespace OverlookedConnect.Internal.Models
 {
-    public class LoginModel /* [Microsoft Learn, [s.a.]] */
-    {
-        [Required(ErrorMessage = "Email address is required.")] /* [Microsoft Learn, [s.a.]] */
-        [EmailAddress(ErrorMessage = "Invalid email address.")]
-        [StringLength(100)]
-        [Display(Name = "Email address")]
-        public string Email { get; set; } = "";
+   public class LoginModel
+{
+    [Required(ErrorMessage = "Email address is required.")]
+    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+    [StringLength(100)]
+    [Display(Name = "Email address")]
+    public string Email { get; set; } = "";
 
-        [Required(ErrorMessage = "Password is required.")]
-        [DataType(DataType.Password)]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters.")]
-        public string Password { get; set; } = "";
+    [Required(ErrorMessage = "Password is required.")]
+    [DataType(DataType.Password)]
+    [StringLength(
+        100,
+        MinimumLength = 6,
+        ErrorMessage = "Password must be at least 6 characters.")]
+    public string Password { get; set; } = "";
 
-        [Display(Name = "Keep me signed in on this device")]
-        public bool RememberMe { get; set; }
-
-        /* Demonstration only. In Task 2 the role is read from the Microsoft Entra External ID
-           role claim rather than selected on the sign-in form. See Section 8.2. */
-        [Required(ErrorMessage = "Select a role to demonstrate.")]
-        [Display(Name = "Sign in as")]
-        public string DemoRole { get; set; } = "executive";
-    }
-
+    [Display(Name = "Keep me signed in on this device")]
+    public bool RememberMe { get; set; }
+}
     public class StaffLeaveRequestModel
     {
         [Required(ErrorMessage = "Leave type is required.")]
