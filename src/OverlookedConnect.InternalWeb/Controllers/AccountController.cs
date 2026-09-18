@@ -1,85 +1,264 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
 
-/*
- This controller handles authentication for the Overlooked Connect Internal Operations Platform:
-  - Login (GET):  renders the secure sign-in screen.
-  - Login (POST): validates the form and writes the selected demonstration role into session.
-  - Logout:       clears the session and returns the user to the sign-in screen.
+namespace OverlookedConnect.Internal.Controllers;
 
- In Task 1 the sign-in is simulated. The user chooses which role to demonstrate so that the
- role-based routing described in Section 2.5.2 can be shown across the platform. In Task 2 this
- controller is replaced by Microsoft Entra External ID, with the role read from a role claim and
- multi-factor authentication enforced for the Executive, HR, Safety and Procurement roles
- (Section 8.2). No password is ever stored or compared here.
-
- AntiForgery tokens are applied to the POST action as a foundational security layer.
- */
-
-namespace OverlookedConnect.Internal.Controllers
+public sealed class AccountController : Controller
 {
-    public class AccountController : Controller
+    private readonly OverlookedApiClient _apiClient;
+    private readonly ILogger<AccountController> _logger;
+
+    public AccountController(
+        OverlookedApiClient apiClient,
+        ILogger<AccountController> logger)
     {
-        /* GET: Account/Login [Smith & Addie, [s.a.]] */
-        [HttpGet]
-        public IActionResult Login()
-        {
-            HttpContext.Session.Clear();
-            return View(new LoginModel());
-        }
-
-        /* POST: Account/Login [Hasan & Anderson, [s.a.]] */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Login(LoginModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            /* For demonstration purposes the credentials are not checked. The selected role is
-               stored in session so that the sidebar and permissions reflect it. */
-            if (!DemoData.Users.TryGetValue(model.DemoRole, out var user))
-            {
-                ModelState.AddModelError(nameof(model.DemoRole), "Unknown role selected.");
-                return View(model);
-            }
-
-            HttpContext.Session.SetString("RoleKey", model.DemoRole);      /* [Anderson & Smith, [s.a.]] */
-            HttpContext.Session.SetString("UserName", user.Name);
-            HttpContext.Session.SetString("UserInitials", user.Initials);
-            HttpContext.Session.SetString("UserRole", user.Role);
-
-            /* Employees are routed to the staff application rather than the back office. */
-            if (model.DemoRole == "employee")
-            {
-                return RedirectToAction("Index", "Staff");
-            }
-
-            return RedirectToAction("Index", "Dashboard");
-        }
-
-        /* GET: Account/Logout */
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear();
-            TempData["SuccessMessage"] = "You have been signed out securely.";
-            return RedirectToAction("Login");
-        }
-
-        /* GET: Account/Error */
-        public IActionResult Error() => View("~/Views/Shared/Error.cshtml", new ErrorViewModel
-        {
-            RequestId = HttpContext.TraceIdentifier
-        });
+        _apiClient = apiClient;
+        _logger = logger;
     }
+
+    // ------------------------------------------------------------
+    // LOGIN - GET
+    // ------------------------------------------------------------
+
+    [HttpGet]
+    public IActionResult Login()
+    {
+        /*
+         * If a user explicitly navigates back to the login page,
+         * clear the previous application session.
+         */
+        HttpContext.Session.Clear();
+
+        return View(new LoginModel());
+    }
+
+
+    // ------------------------------------------------------------
+    // LOGIN - POST
+    // ------------------------------------------------------------
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(
+        LoginModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var result = await _apiClient.LoginAsync(
+            model.Email,
+            model.Password,
+            cancellationToken);
+
+        
+        if (!result.IsSuccess ||
+    result.Response is null)
+{
+    switch (result.Status)
+    {
+        case ApiLoginStatus.InvalidCredentials:
+
+            ModelState.AddModelError(
+                string.Empty,
+                "Invalid email address or password.");
+
+            break;
+
+        case ApiLoginStatus.ApiUnavailable:
+
+            ModelState.AddModelError(
+                string.Empty,
+                "The Overlooked Connect service is currently unavailable. Please try again.");
+
+            break;
+
+        default:
+
+            ModelState.AddModelError(
+                string.Empty,
+                "We could not complete your sign-in. Please try again.");
+
+            break;
+    }
+
+    // Do not retain the submitted password after a failed login.
+    model.Password = string.Empty;
+
+    return View(model);
 }
 
-/*
-    Reference List:
-        - Anderson, R. and Smith, S. [s.a.]. Session and state management in ASP.NET Core | Microsoft Learn. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state> [Accessed 14 August 2026].
-        - Hasan, F. and Anderson, R. [s.a.]. Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core | Microsoft Learn. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery> [Accessed 14 August 2026].
-        - Microsoft Learn. [s.a.]. Overview of Microsoft Entra External ID. [online]. Available at: <https://learn.microsoft.com/en-us/entra/external-id/> [Accessed 14 August 2026].
-        - Smith, S. and Addie, S. [s.a.]. Handle requests with controllers in ASP.NET Core MVC | Microsoft Learn. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/actions> [Accessed 14 August 2026].
-*/
+        var login = result.Response;
+
+
+        // --------------------------------------------------------
+        // SERVER-SIDE SESSION
+        // --------------------------------------------------------
+
+        HttpContext.Session.SetString(
+            "AccessToken",
+            login.AccessToken);
+
+        HttpContext.Session.SetString(
+            "TokenExpiresAtUtc",
+            login.ExpiresAtUtc.ToString("O"));
+
+        HttpContext.Session.SetInt32(
+            "UserId",
+            login.UserId);
+
+        HttpContext.Session.SetString(
+            "UserName",
+            login.FullName);
+
+        HttpContext.Session.SetString(
+            "UserEmail",
+            login.Email);
+
+        HttpContext.Session.SetString(
+            "UserRole",
+            login.Role);
+
+        HttpContext.Session.SetString(
+            "RoleKey",
+            GetRoleKey(login.Role));
+
+        HttpContext.Session.SetString(
+            "UserInitials",
+            GetInitials(login.FullName));
+
+
+        if (!string.IsNullOrWhiteSpace(
+                login.EmployeeNumber))
+        {
+            HttpContext.Session.SetString(
+                "EmployeeNumber",
+                login.EmployeeNumber);
+        }
+
+
+        if (login.EmployeeId.HasValue)
+        {
+            HttpContext.Session.SetInt32(
+                "EmployeeId",
+                login.EmployeeId.Value);
+        }
+
+
+        _logger.LogInformation(
+            "User {UserId} signed in to Internal Web with role {Role}.",
+            login.UserId,
+            login.Role);
+
+
+        // --------------------------------------------------------
+        // ROLE-BASED ROUTING
+        // --------------------------------------------------------
+
+        if (string.Equals(
+                login.Role,
+                "Employee",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction(
+                "Index",
+                "Staff");
+        }
+
+
+        return RedirectToAction(
+            "Index",
+            "Dashboard");
+    }
+
+
+    // ------------------------------------------------------------
+    // LOGOUT
+    // ------------------------------------------------------------
+
+    [HttpGet]
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear();
+
+        TempData["SuccessMessage"] =
+            "You have been signed out securely.";
+
+        return RedirectToAction(
+            nameof(Login));
+    }
+
+
+    // ------------------------------------------------------------
+    // ERROR
+    // ------------------------------------------------------------
+
+    [HttpGet]
+    public IActionResult Error()
+    {
+        return View(
+            "~/Views/Shared/Error.cshtml",
+            new ErrorViewModel
+            {
+                RequestId =
+                    HttpContext.TraceIdentifier
+            });
+    }
+
+
+    // ------------------------------------------------------------
+    // HELPERS
+    // ------------------------------------------------------------
+
+    private static string GetRoleKey(
+        string role)
+    {
+        return role.Trim().ToLowerInvariant() switch
+        {
+            "executive" => "executive",
+            "hr" => "hr",
+            "safety" => "safety",
+            "procurement" => "procurement",
+            "employee" => "employee",
+            "supplier" => "supplier",
+
+            _ => role.Trim().ToLowerInvariant()
+        };
+    }
+
+
+    private static string GetInitials(
+        string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            return "U";
+        }
+
+        var names = fullName
+            .Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries);
+
+        if (names.Length == 0)
+        {
+            return "U";
+        }
+
+        if (names.Length == 1)
+        {
+            return names[0][0]
+                .ToString()
+                .ToUpperInvariant();
+        }
+
+        return string.Concat(
+                names[0][0],
+                names[^1][0])
+            .ToUpperInvariant();
+    }
+}
