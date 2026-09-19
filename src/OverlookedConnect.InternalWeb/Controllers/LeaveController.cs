@@ -1,83 +1,340 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
 
-/*
- This controller serves the Leave & Shift Scheduling module (FR-03, US-04, US-09) for the
- HR & Operations role:
-  - Index:   the leave request register with approve and decline actions.
-  - Roster:  the visual monthly shift roster with clash detection.
-  - Approve: simulates approval, deducting the balance and writing an audit entry.
+namespace OverlookedConnect.Internal.Controllers;
 
- The business rule demonstrated here is the one documented in Section 5.1.2: a leave request is
- rejected where it overlaps an existing ShiftRoster entry, or where it exceeds the employee's
- remaining balance. In the sample data L. Khumalo's request is declined automatically because
- 11 to 22 August overlaps rostered shifts at Forzando South on 14 and 15 August.
-
- The status update, the balance deduction and the audit write are committed as a single transaction
- in the live system, so an approval can never be recorded without also recording who made it.
- */
-
-namespace OverlookedConnect.Internal.Controllers
+public class LeaveController : Controller
 {
-    public class LeaveController : Controller
+    private readonly OverlookedApiClient _apiClient;
+    private readonly ILogger<LeaveController> _logger;
+
+    public LeaveController(
+        OverlookedApiClient apiClient,
+        ILogger<LeaveController> logger)
     {
-        /* GET: Leave/Index */
-        public IActionResult Index(string? filter)
+        _apiClient = apiClient;
+        _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        string? status,
+        CancellationToken cancellationToken)
+    {
+        var accessToken = HttpContext.Session.GetString("AccessToken");
+        var role = HttpContext.Session.GetString("UserRole");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
-            var requests = DemoData.LeaveRequests.AsEnumerable();
-
-            if (!string.IsNullOrWhiteSpace(filter) && filter != "All")
-            {
-                requests = requests.Where(r => r.ApprovalStatus == filter);
-            }
-
-            ViewBag.Filter = filter ?? "All";
-            return View(requests.ToList());
+            return RedirectToAction(
+                "Login",
+                "Account",
+                new { returnUrl = Url.Action("Index", "Leave") });
         }
 
-        /* GET: Leave/Roster */
-        public IActionResult Roster(string? site)
+        if (!IsLeaveManager(role))
         {
-            ViewBag.Site = site ?? "Forzando South";
-            return View(DemoData.Roster);
+            return RedirectToAction("Index", "Staff");
         }
 
-        /* POST: Leave/Approve */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Approve(int leaveId, string employeeName, decimal days)
+        var result = await _apiClient.GetLeaveRequestsAsync(
+            accessToken,
+            cancellationToken);
+
+        switch (result.Status)
         {
-            /* For demonstration/simulation purposes, it will just show a success message in the prototype. */
-            TempData["SuccessMessage"] =
-                $"Leave request #{leaveId} for {employeeName} approved. {days:0.0} days deducted from the balance and an audit entry written in the same transaction.";
-            return RedirectToAction("Index");
+            case ApiLeaveStatus.Unauthorized:
+                HttpContext.Session.Clear();
+
+                TempData["Error"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+
+            case ApiLeaveStatus.Forbidden:
+                TempData["Error"] =
+                    "You do not have permission to access leave management.";
+
+                return RedirectToAction(
+                    "Index",
+                    "Dashboard");
+
+            case ApiLeaveStatus.ApiUnavailable:
+                TempData["Error"] =
+                    "The Overlooked Connect service is currently unavailable. Please try again.";
+
+                return View(new List<LeaveRequest>());
+
+            case ApiLeaveStatus.ApiFailure:
+                TempData["Error"] =
+                    result.ErrorMessage ??
+                    "Leave requests could not be loaded.";
+
+                return View(new List<LeaveRequest>());
         }
 
-        /* POST: Leave/Decline */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Decline(int leaveId, string employeeName)
+        var requests = result.Data ?? Array.Empty<ApiLeaveRequest>();
+
+        var leaveRequests = requests
+            .Select(MapToViewModel)
+            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(status) &&
+            !status.Equals(
+                "All",
+                StringComparison.OrdinalIgnoreCase))
         {
-            TempData["SuccessMessage"] =
-                $"Leave request #{leaveId} for {employeeName} declined. No change was made to the leave balance.";
-            return RedirectToAction("Index");
+            leaveRequests = leaveRequests
+                .Where(x =>
+                    x.ApprovalStatus.Equals(
+                        status,
+                        StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
 
-        /* POST: Leave/PublishRoster */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult PublishRoster()
+        return View(leaveRequests);
+    }
+
+    [HttpGet]
+    public IActionResult Roster()
+    {
+        // Roster remains on DemoData until the Shift API
+        // is connected in its own integration.
+        return View(DemoData.Roster);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Approve(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var accessToken = HttpContext.Session.GetString("AccessToken");
+        var role = HttpContext.Session.GetString("UserRole");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
-            TempData["SuccessMessage"] =
-                "Roster published and employees notified. Unresolved leave clashes remain flagged for HR attention.";
-            return RedirectToAction("Roster");
+            return RedirectToAction(
+                "Login",
+                "Account");
         }
+
+        if (!IsLeaveManager(role))
+        {
+            TempData["Error"] =
+                "You do not have permission to approve leave requests.";
+
+            return RedirectToAction(
+                "Index",
+                "Dashboard");
+        }
+
+        var result = await _apiClient.ApproveLeaveAsync(
+            id,
+            accessToken,
+            cancellationToken);
+
+        switch (result.Status)
+        {
+            case ApiLeaveStatus.Success:
+                TempData["Success"] =
+                    "Leave request approved successfully.";
+                break;
+
+            case ApiLeaveStatus.Unauthorized:
+                HttpContext.Session.Clear();
+
+                TempData["Error"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+
+            case ApiLeaveStatus.Forbidden:
+                TempData["Error"] =
+                    "You do not have permission to approve leave requests.";
+                break;
+
+            case ApiLeaveStatus.ApiUnavailable:
+                TempData["Error"] =
+                    "The Overlooked Connect service is currently unavailable. Please try again.";
+                break;
+
+            default:
+                TempData["Error"] =
+                    result.ErrorMessage ??
+                    "The leave request could not be approved.";
+                break;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Decline(
+        int id,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        var accessToken = HttpContext.Session.GetString("AccessToken");
+        var role = HttpContext.Session.GetString("UserRole");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction(
+                "Login",
+                "Account");
+        }
+
+        if (!IsLeaveManager(role))
+        {
+            TempData["Error"] =
+                "You do not have permission to decline leave requests.";
+
+            return RedirectToAction(
+                "Index",
+                "Dashboard");
+        }
+
+        var result = await _apiClient.DeclineLeaveAsync(
+            id,
+            accessToken,
+            reason,
+            cancellationToken);
+
+        switch (result.Status)
+        {
+            case ApiLeaveStatus.Success:
+                TempData["Success"] =
+                    "Leave request declined successfully.";
+                break;
+
+            case ApiLeaveStatus.Unauthorized:
+                HttpContext.Session.Clear();
+
+                TempData["Error"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+
+            case ApiLeaveStatus.Forbidden:
+                TempData["Error"] =
+                    "You do not have permission to decline leave requests.";
+                break;
+
+            case ApiLeaveStatus.ApiUnavailable:
+                TempData["Error"] =
+                    "The Overlooked Connect service is currently unavailable. Please try again.";
+                break;
+
+            default:
+                TempData["Error"] =
+                    result.ErrorMessage ??
+                    "The leave request could not be declined.";
+                break;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private static bool IsLeaveManager(string? role)
+    {
+        return string.Equals(
+                   role,
+                   "HR",
+                   StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(
+                   role,
+                   "Executive",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static LeaveRequest MapToViewModel(
+        ApiLeaveRequest request)
+    {
+        var initials = GetInitials(request.EmployeeName);
+
+        return new LeaveRequest
+        {
+           LeaveId = request.LeaveRequestId,
+            EmployeeName = string.IsNullOrWhiteSpace(
+                request.EmployeeName)
+                ? request.EmployeeNumber
+                : request.EmployeeName,
+
+            Initials = initials,
+
+            AvatarColour = GetAvatarColour(
+                request.EmployeeId),
+
+            LeaveType = request.LeaveType,
+
+            Dates =
+                $"{request.StartDate:dd MMM yyyy} – {request.EndDate:dd MMM yyyy}",
+
+            Days = request.Days,
+
+            // The current Leave API does not expose a
+            // balance-after value. Do not fabricate one.
+           BalanceAfter = 0m,
+
+            ApprovalStatus = request.Status,
+
+            // Roster clashes are checked by the backend during
+            // approval. They are not returned by the leave list API.
+            RosterClash = false,
+            ClashDetail = null
+        };
+    }
+
+    private static string GetInitials(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            return "?";
+        }
+
+        var parts = fullName
+            .Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            return parts[0][0]
+                .ToString()
+                .ToUpperInvariant();
+        }
+
+        return string.Concat(
+            parts[0][0],
+            parts[^1][0])
+            .ToUpperInvariant();
+    }
+
+    private static string GetAvatarColour(int employeeId)
+    {
+        var colours = new[]
+        {
+            "#1f6f5c",
+            "#365f91",
+            "#7a5c3e",
+            "#6b5b95",
+            "#3f7d6d",
+            "#805d72"
+        };
+
+        var index =
+            Math.Abs(employeeId) %
+            colours.Length;
+
+        return colours[index];
     }
 }
-
-/*
-    Reference List:
-        - Microsoft Learn. [s.a.]. Enumerable.Where Method (System.Linq). [online]. Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.where> [Accessed 14 August 2026].
-        - Microsoft Learn. [s.a.]. Model validation in ASP.NET Core MVC. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation> [Accessed 14 August 2026].
-        - Nowak, R., Larkin, K. and Anderson, R. [s.a.]. Routing to controller actions in ASP.NET Core MVC | Microsoft Learn. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/routing> [Accessed 14 August 2026].
-*/
