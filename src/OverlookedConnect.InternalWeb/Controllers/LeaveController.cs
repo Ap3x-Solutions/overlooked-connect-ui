@@ -97,14 +97,117 @@ public class LeaveController : Controller
 
         return View(leaveRequests);
     }
+[HttpGet]
+public async Task<IActionResult> Roster(
+    string? site,
+    DateTime? weekStart,
+    CancellationToken cancellationToken)
+{
+    var accessToken =
+        HttpContext.Session.GetString("AccessToken");
 
-    [HttpGet]
-    public IActionResult Roster()
+    var role =
+        HttpContext.Session.GetString("UserRole");
+
+    if (string.IsNullOrWhiteSpace(accessToken))
     {
-        // Roster remains on DemoData until the Shift API
-        // is connected in its own integration.
-        return View(DemoData.Roster);
+        return RedirectToAction(
+            "Login",
+            "Account",
+            new
+            {
+                returnUrl = Url.Action(
+                    "Roster",
+                    "Leave")
+            });
     }
+
+    if (!IsLeaveManager(role))
+    {
+        TempData["Error"] =
+            "You do not have permission to access shift management.";
+
+        return RedirectToAction(
+            "Index",
+            "Staff");
+    }
+
+    var selectedSite =
+        string.IsNullOrWhiteSpace(site)
+            ? "Forzando South"
+            : site.Trim();
+
+    var selectedWeek =
+        GetMonday(
+            weekStart?.Date ??
+            DateTime.Today);
+
+    var result =
+        await _apiClient.GetShiftRosterAsync(
+            selectedSite,
+            selectedWeek,
+            accessToken,
+            cancellationToken);
+
+    switch (result.Status)
+    {
+        case ApiShiftStatus.Unauthorized:
+            HttpContext.Session.Clear();
+
+            TempData["Error"] =
+                "Your session has expired. Please sign in again.";
+
+            return RedirectToAction(
+                "Login",
+                "Account");
+
+        case ApiShiftStatus.Forbidden:
+            TempData["Error"] =
+                "You do not have permission to access shift management.";
+
+            return RedirectToAction(
+                "Index",
+                "Dashboard");
+
+        case ApiShiftStatus.ApiUnavailable:
+            TempData["Error"] =
+                "The Overlooked Connect service is currently unavailable. Please try again.";
+
+            SetRosterViewData(
+                selectedSite,
+                selectedWeek);
+
+            return View(
+                new List<ShiftEntry>());
+
+        case ApiShiftStatus.ApiFailure:
+            TempData["Error"] =
+                result.ErrorMessage ??
+                "The shift roster could not be loaded.";
+
+            SetRosterViewData(
+                selectedSite,
+                selectedWeek);
+
+            return View(
+                new List<ShiftEntry>());
+    }
+
+    var shifts =
+        result.Data ??
+        Array.Empty<ApiShift>();
+
+    var roster =
+        MapShiftRoster(
+            shifts,
+            selectedWeek);
+
+    SetRosterViewData(
+        selectedSite,
+        selectedWeek);
+
+    return View(roster);
+}
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -293,7 +396,118 @@ public class LeaveController : Controller
             ClashDetail = null
         };
     }
+private static List<ShiftEntry> MapShiftRoster(
+    IEnumerable<ApiShift> shifts,
+    DateTime weekStart)
+{
+    var weekEnd =
+        weekStart.AddDays(6);
 
+    return shifts
+        .Where(x =>
+            x.ShiftDate.Date >= weekStart &&
+            x.ShiftDate.Date <= weekEnd)
+        .GroupBy(x => new
+        {
+            x.EmployeeId,
+            x.EmployeeNumber,
+            x.EmployeeName
+        })
+        .OrderBy(x => x.Key.EmployeeName)
+        .Select(group =>
+        {
+            var pattern =
+                Enumerable.Repeat(
+                        "Rest",
+                        7)
+                    .ToArray();
+
+            foreach (var shift in group)
+            {
+                var dayIndex =
+                    (shift.ShiftDate.Date - weekStart).Days;
+
+                if (dayIndex < 0 ||
+                    dayIndex > 6)
+                {
+                    continue;
+                }
+
+                pattern[dayIndex] =
+                    NormalizeShiftType(
+                        shift.ShiftType);
+            }
+
+            var employeeName =
+                string.IsNullOrWhiteSpace(
+                    group.Key.EmployeeName)
+                    ? group.Key.EmployeeNumber
+                    : group.Key.EmployeeName;
+
+            return new ShiftEntry
+            {
+                EmployeeName = employeeName,
+                Initials =
+                    GetInitials(employeeName),
+                AvatarColour =
+                    GetAvatarColour(
+                        group.Key.EmployeeId),
+                Pattern = pattern
+            };
+        })
+        .ToList();
+}
+
+private static string NormalizeShiftType(
+    string? shiftType)
+{
+    if (string.Equals(
+        shiftType,
+        "Day",
+        StringComparison.OrdinalIgnoreCase))
+    {
+        return "Day";
+    }
+
+    if (string.Equals(
+        shiftType,
+        "Night",
+        StringComparison.OrdinalIgnoreCase))
+    {
+        return "Night";
+    }
+
+    if (string.Equals(
+        shiftType,
+        "Leave",
+        StringComparison.OrdinalIgnoreCase))
+    {
+        return "Leave";
+    }
+
+    return "Rest";
+}
+
+private static DateTime GetMonday(
+    DateTime date)
+{
+    var difference =
+        (7 +
+         (date.DayOfWeek - DayOfWeek.Monday)) %
+        7;
+
+    return date.AddDays(-difference).Date;
+}
+
+private void SetRosterViewData(
+    string site,
+    DateTime weekStart)
+{
+    ViewBag.Site = site;
+    ViewBag.WeekStart = weekStart;
+    ViewBag.WeekEnd =
+        weekStart.AddDays(6);
+}
     private static string GetInitials(string? fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))
