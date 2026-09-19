@@ -381,7 +381,121 @@ public sealed class OverlookedApiClient
             return ApiLeaveResult<ApiLeaveRequest>.Failure();
         }
     }
+/// <summary>
+/// Returns the weekly shift roster for a site.
+/// GET /api/shifts?site={site}&amp;weekStart={weekStart}
+/// </summary>
+public async Task<ApiShiftResult<IReadOnlyList<ApiShift>>>
+    GetShiftRosterAsync(
+        string site,
+        DateTime weekStart,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+{
+    try
+    {
+        var requestUri =
+            $"api/shifts?site={Uri.EscapeDataString(site)}" +
+            $"&weekStart={weekStart:yyyy-MM-dd}";
 
+        using var request = CreateAuthenticatedRequest(
+            HttpMethod.Get,
+            requestUri,
+            accessToken);
+
+        using var response = await _httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        return await ReadShiftResponseAsync<
+            IReadOnlyList<ApiShift>>(
+                response,
+                cancellationToken);
+    }
+    catch (TaskCanceledException)
+        when (!cancellationToken.IsCancellationRequested)
+    {
+        _logger.LogWarning(
+            "Shift roster request to the API timed out.");
+
+        return ApiShiftResult<
+            IReadOnlyList<ApiShift>>.Unavailable();
+    }
+    catch (HttpRequestException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Unable to connect to the Shift API.");
+
+        return ApiShiftResult<
+            IReadOnlyList<ApiShift>>.Unavailable();
+    }
+    catch (JsonException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Shift API returned invalid JSON.");
+
+        return ApiShiftResult<
+            IReadOnlyList<ApiShift>>.Failure();
+    }
+}
+
+/// <summary>
+/// Converts a Shift API response into a result the MVC application can handle.
+/// </summary>
+private async Task<ApiShiftResult<T>> ReadShiftResponseAsync<T>(
+    HttpResponseMessage response,
+    CancellationToken cancellationToken)
+{
+    if (response.StatusCode == HttpStatusCode.Unauthorized)
+    {
+        return ApiShiftResult<T>.Unauthorized();
+    }
+
+    if (response.StatusCode == HttpStatusCode.Forbidden)
+    {
+        return ApiShiftResult<T>.Forbidden();
+    }
+
+    if (!response.IsSuccessStatusCode)
+    {
+        string? message = null;
+
+        try
+        {
+            var problem =
+                await response.Content.ReadFromJsonAsync<ApiProblemDetails>(
+                    JsonOptions,
+                    cancellationToken);
+
+            message =
+                problem?.Message ??
+                problem?.Detail ??
+                problem?.Title;
+        }
+        catch (JsonException)
+        {
+            // Use the MVC application's fallback error message.
+        }
+
+        _logger.LogWarning(
+            "Shift API returned HTTP {StatusCode}: {Message}",
+            (int)response.StatusCode,
+            message ?? "No error message returned.");
+
+        return ApiShiftResult<T>.Failure(message);
+    }
+
+    var result =
+        await response.Content.ReadFromJsonAsync<T>(
+            JsonOptions,
+            cancellationToken);
+
+    return result is null
+        ? ApiShiftResult<T>.Failure()
+        : ApiShiftResult<T>.Success(result);
+}
     /// <summary>
     /// Reads a response returned by a Leave API endpoint and converts
     /// common HTTP outcomes into a result the MVC application can handle.
@@ -569,4 +683,57 @@ public sealed class ApiProblemDetails
 
     [JsonPropertyName("detail")]
     public string? Detail { get; set; }
+}
+
+public enum ApiShiftStatus
+{
+    Success,
+    Unauthorized,
+    Forbidden,
+    ApiUnavailable,
+    ApiFailure
+}
+
+public sealed class ApiShiftResult<T>
+{
+    private ApiShiftResult(
+        ApiShiftStatus status,
+        T? data = default,
+        string? errorMessage = null)
+    {
+        Status = status;
+        Data = data;
+        ErrorMessage = errorMessage;
+    }
+
+    public ApiShiftStatus Status { get; }
+
+    public T? Data { get; }
+
+    public string? ErrorMessage { get; }
+
+    public bool IsSuccess =>
+        Status == ApiShiftStatus.Success &&
+        Data is not null;
+
+    public static ApiShiftResult<T> Success(T data)
+        => new(
+            ApiShiftStatus.Success,
+            data);
+
+    public static ApiShiftResult<T> Unauthorized()
+        => new(ApiShiftStatus.Unauthorized);
+
+    public static ApiShiftResult<T> Forbidden()
+        => new(ApiShiftStatus.Forbidden);
+
+    public static ApiShiftResult<T> Unavailable()
+        => new(ApiShiftStatus.ApiUnavailable);
+
+    public static ApiShiftResult<T> Failure(
+        string? message = null)
+        => new(
+            ApiShiftStatus.ApiFailure,
+            default,
+            message);
 }
