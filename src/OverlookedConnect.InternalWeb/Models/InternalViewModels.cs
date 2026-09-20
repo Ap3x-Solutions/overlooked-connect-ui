@@ -118,6 +118,42 @@ namespace OverlookedConnect.Internal.Models
         public List<Incident> Incidents { get; set; } = new();
         public Incident? Selected { get; set; }
     }
+
+ 
+public class StaffHomeViewModel
+{
+    public string EmployeeName { get; set; } = "";
+
+    public string EmployeeNumber { get; set; } = "";
+
+    public List<ApiShift> Shifts { get; set; } = new();
+
+    public ApiShift? NextShift =>
+        Shifts
+            .Where(x => x.ShiftDate.Date >= DateTime.Today)
+            .OrderBy(x => x.ShiftDate)
+            .FirstOrDefault();
+
+    public string Initials
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(EmployeeName))
+            {
+                return "E";
+            }
+
+            var parts = EmployeeName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+            return string.Concat(
+                parts
+                    .Take(2)
+                    .Select(x => char.ToUpperInvariant(x[0])));
+        }
+    }
+}
 }
 
 /*

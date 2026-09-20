@@ -1,103 +1,193 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
-
-/*
- This controller serves the staff mobile application (US-08, US-09, US-10), used by the Employee role
- on the Android companion app:
-  - Index:    staff home with clock in and out.
-  - Leave:    submit a leave request from the device.
-  - Incident: capture a safety incident with photographic evidence.
-  - Payslip:  view and download a payslip.
-
- Two behaviours documented in Section 5.2.2 and NFR-13 are demonstrated here:
-  1. The incident capture timestamp is set server-side rather than from the device, so that clock
-     drift on a handset cannot alter the safety register.
-  2. Where the device has no signal the report is queued locally and synchronised when connectivity
-     returns, with the original capture time preserved. Mining sites in Mpumalanga have intermittent
-     coverage, so this is a functional requirement rather than a convenience.
-
- The leave screen also demonstrates the roster clash rule from Section 5.1.2 before submission, so
- that the employee is warned rather than discovering the conflict after HR declines the request.
- */
+using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers
 {
     public class StaffController : Controller
     {
-        /* GET: Staff/Index */
-        public IActionResult Index() => View();
+        private readonly OverlookedApiClient _apiClient;
 
-        /* POST: Staff/ClockOut */
+        public StaffController(
+            OverlookedApiClient apiClient)
+        {
+            _apiClient = apiClient;
+        }
+
+        /* =========================================================
+           STAFF HOME / EMPLOYEE SCHEDULE
+           ========================================================= */
+
+        [HttpGet]
+        public async Task<IActionResult> Index(
+            CancellationToken cancellationToken)
+        {
+            var accessToken =
+                HttpContext.Session.GetString("AccessToken");
+
+            var role =
+                HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+            }
+
+            if (!string.Equals(
+                    role,
+                    "Employee",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Error"] =
+                    "You do not have permission to access the employee portal.";
+
+                return RedirectToAction(
+                    "Index",
+                    "Dashboard");
+            }
+
+            var result =
+                await _apiClient.GetMyScheduleAsync(
+                    accessToken,
+                    cancellationToken);
+
+            switch (result.Status)
+            {
+                case ApiShiftStatus.Unauthorized:
+                    HttpContext.Session.Clear();
+
+                    TempData["Error"] =
+                        "Your session has expired. Please sign in again.";
+
+                    return RedirectToAction(
+                        "Login",
+                        "Account");
+
+                case ApiShiftStatus.Forbidden:
+                    TempData["Error"] =
+                        "You do not have permission to view this schedule.";
+
+                    return RedirectToAction(
+                        "Login",
+                        "Account");
+
+                case ApiShiftStatus.ApiUnavailable:
+                    ViewBag.ScheduleError =
+                        "The Overlooked Connect service is currently unavailable. Please try again.";
+                    break;
+
+                case ApiShiftStatus.ApiFailure:
+                    ViewBag.ScheduleError =
+                        result.ErrorMessage ??
+                        "Your shift schedule could not be loaded.";
+                    break;
+            }
+
+            var shifts =
+                result.Data?
+                    .OrderBy(x => x.ShiftDate)
+                    .ToList()
+                ?? new List<ApiShift>();
+
+            var model =
+                new StaffHomeViewModel
+                {
+                    EmployeeName =
+                        HttpContext.Session.GetString("UserName") ??
+                        "Employee",
+
+                    EmployeeNumber =
+                        HttpContext.Session.GetString("EmployeeNumber") ??
+                        string.Empty,
+
+                    Shifts = shifts
+                };
+
+            return View(model);
+        }
+
+        /* =========================================================
+           CLOCK OUT
+           ========================================================= */
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult ClockOut()
         {
-            /* For demonstration/simulation purposes, it will just show a success message in the prototype. */
             TempData["SuccessMessage"] =
-                "Clocked out at 18:00. Shift duration 11 h 58 m recorded, with location captured server-side.";
+                "Clock-out functionality is not yet connected to the API.";
+
             return RedirectToAction("Index");
         }
 
-        /* GET: Staff/Leave */
-        [HttpGet]
-        public IActionResult Leave() => View(new StaffLeaveRequestModel
-        {
-            StartDate = new DateTime(2026, 8, 14),
-            EndDate = new DateTime(2026, 8, 18)
-        });
+        /* =========================================================
+           EMPLOYEE LEAVE
+           ========================================================= */
 
-        /* POST: Staff/Leave */
+        [HttpGet]
+        public IActionResult Leave()
+        {
+            return View(
+                new StaffLeaveRequestModel
+                {
+                    StartDate = DateTime.Today,
+                    EndDate = DateTime.Today
+                });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Leave(StaffLeaveRequestModel model)
+        public IActionResult Leave(
+            StaffLeaveRequestModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            /* Roster clash detection, mirroring the rule enforced by LeaveService in Section 5.1.2. */
             TempData["SuccessMessage"] =
-                "Leave request submitted and routed to N. Sithole (HR & Operations) for approval. A roster clash on 14 and 15 August has been flagged for HR to arrange cover.";
+                "Leave request functionality is not yet connected to the API.";
+
             return RedirectToAction("Index");
         }
 
-        /* GET: Staff/Incident */
-        [HttpGet]
-        public IActionResult Incident() => View(new IncidentCaptureModel
-        {
-            Severity = "High",
-            IncidentType = "Equipment / guarding failure",
-            Location = "-26.0741, 29.4517 (accuracy 6 m)"
-        });
+        /* =========================================================
+           INCIDENT REPORTING
+           ========================================================= */
 
-        /* POST: Staff/Incident */
+        [HttpGet]
+        public IActionResult Incident()
+        {
+            return View(
+                new IncidentCaptureModel());
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Incident(IncidentCaptureModel model)
+        public IActionResult Incident(
+            IncidentCaptureModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var escalation = model.Severity is "High" or "Fatal / LTI"
-                ? " Severity is high, so the Safety Manager has been notified immediately."
-                : string.Empty;
-
             TempData["SuccessMessage"] =
-                $"Incident report captured and queued. The record is timestamped server-side and will synchronise when connectivity returns.{escalation}";
+                "Incident reporting is not yet connected to the API.";
+
             return RedirectToAction("Index");
         }
 
-        /* GET: Staff/Payslip */
-        public IActionResult Payslip() => View();
+        /* =========================================================
+           PAYSLIP
+           ========================================================= */
+
+        [HttpGet]
+        public IActionResult Payslip()
+        {
+            return View();
+        }
     }
 }
-
-/*
-    Reference List:
-        - Microsoft Learn. [s.a.]. Model validation in ASP.NET Core MVC. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation> [Accessed 14 August 2026].
-        - Microsoft Learn. [s.a.]. Upload files in ASP.NET Core. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads> [Accessed 14 August 2026].
-        - Republic of South Africa. 1996. Mine Health and Safety Act, No. 29 of 1996. Cape Town: Government Printers.
-*/
