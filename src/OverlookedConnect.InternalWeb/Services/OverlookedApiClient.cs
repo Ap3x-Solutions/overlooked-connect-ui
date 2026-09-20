@@ -442,6 +442,61 @@ public async Task<ApiShiftResult<IReadOnlyList<ApiShift>>>
 }
 
 /// <summary>
+/// Returns the authenticated employee's shift schedule.
+/// GET /api/shifts/me
+/// </summary>
+public async Task<ApiShiftResult<IReadOnlyList<ApiShift>>>
+    GetMyScheduleAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default)
+{
+    try
+    {
+        using var request =
+            CreateAuthenticatedRequest(
+                HttpMethod.Get,
+                "api/shifts/me",
+                accessToken);
+
+        using var response =
+            await _httpClient.SendAsync(
+                request,
+                cancellationToken);
+
+        return await ReadShiftResponseAsync<
+            IReadOnlyList<ApiShift>>(
+                response,
+                cancellationToken);
+    }
+    catch (TaskCanceledException)
+        when (!cancellationToken.IsCancellationRequested)
+    {
+        _logger.LogWarning(
+            "Employee schedule request to the API timed out.");
+
+        return ApiShiftResult<
+            IReadOnlyList<ApiShift>>.Unavailable();
+    }
+    catch (HttpRequestException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Unable to connect to the employee Shift API.");
+
+        return ApiShiftResult<
+            IReadOnlyList<ApiShift>>.Unavailable();
+    }
+    catch (JsonException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Employee Shift API returned invalid JSON.");
+
+        return ApiShiftResult<
+            IReadOnlyList<ApiShift>>.Failure();
+    }
+}
+/// <summary>
 /// Converts a Shift API response into a result the MVC application can handle.
 /// </summary>
 private async Task<ApiShiftResult<T>> ReadShiftResponseAsync<T>(
