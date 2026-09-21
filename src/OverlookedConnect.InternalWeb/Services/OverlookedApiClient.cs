@@ -630,6 +630,97 @@ private async Task<ApiShiftResult<T>> ReadShiftResponseAsync<T>(
 
         return request;
     }
+    /// <summary>
+/// Creates a safety incident for the authenticated employee.
+/// POST /api/incidents
+/// </summary>
+public async Task<ApiIncidentResult<ApiIncident>> CreateIncidentAsync(
+    string accessToken,
+    ApiCreateIncidentRequest incident,
+    CancellationToken cancellationToken = default)
+{
+    try
+    {
+        using var request =
+            CreateAuthenticatedRequest(
+                HttpMethod.Post,
+                "api/incidents",
+                accessToken);
+
+        request.Content =
+            JsonContent.Create(incident);
+
+        using var response =
+            await _httpClient.SendAsync(
+                request,
+                cancellationToken);
+
+        if (response.StatusCode ==
+            System.Net.HttpStatusCode.Unauthorized)
+        {
+            return ApiIncidentResult<ApiIncident>.Unauthorized();
+        }
+
+        if (response.StatusCode ==
+            System.Net.HttpStatusCode.Forbidden)
+        {
+            return ApiIncidentResult<ApiIncident>.Forbidden();
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            string? errorMessage = null;
+
+            try
+            {
+                var problem =
+                    await response.Content
+                        .ReadFromJsonAsync<ApiProblemDetails>(
+                            cancellationToken: cancellationToken);
+
+                errorMessage =
+                    problem?.Message ??
+                    problem?.Detail ??
+                    problem?.Title;
+            }
+            catch
+            {
+                // Preserve the fallback message below.
+            }
+
+            return ApiIncidentResult<ApiIncident>.Failure(
+                errorMessage ??
+                $"Incident submission failed with HTTP {(int)response.StatusCode}.");
+        }
+
+        var created =
+            await response.Content
+                .ReadFromJsonAsync<ApiIncident>(
+                    cancellationToken: cancellationToken);
+
+        if (created is null)
+        {
+            return ApiIncidentResult<ApiIncident>.Failure(
+                "The API returned an empty incident response.");
+        }
+
+        return ApiIncidentResult<ApiIncident>.Success(created);
+    }
+    catch (HttpRequestException)
+    {
+        return ApiIncidentResult<ApiIncident>.Unavailable();
+    }
+    catch (TaskCanceledException)
+        when (!cancellationToken.IsCancellationRequested)
+    {
+        return ApiIncidentResult<ApiIncident>.Unavailable();
+    }
+    catch
+    {
+        return ApiIncidentResult<ApiIncident>.Failure(
+            "An unexpected error occurred while submitting the incident.");
+    }
+}
 }
 
 public enum ApiLoginStatus
@@ -789,6 +880,58 @@ public sealed class ApiShiftResult<T>
         string? message = null)
         => new(
             ApiShiftStatus.ApiFailure,
+            default,
+            message);
+}
+public enum ApiIncidentStatus
+{
+    Success,
+    Unauthorized,
+    Forbidden,
+    ApiUnavailable,
+    ApiFailure
+}
+
+public sealed class ApiIncidentResult<T>
+{
+    private ApiIncidentResult(
+        ApiIncidentStatus status,
+        T? data = default,
+        string? errorMessage = null)
+    {
+        Status = status;
+        Data = data;
+        ErrorMessage = errorMessage;
+    }
+
+    public ApiIncidentStatus Status { get; }
+
+    public T? Data { get; }
+
+    public string? ErrorMessage { get; }
+
+    public bool IsSuccess =>
+        Status == ApiIncidentStatus.Success &&
+        Data is not null;
+
+    public static ApiIncidentResult<T> Success(T data)
+        => new(
+            ApiIncidentStatus.Success,
+            data);
+
+    public static ApiIncidentResult<T> Unauthorized()
+        => new(ApiIncidentStatus.Unauthorized);
+
+    public static ApiIncidentResult<T> Forbidden()
+        => new(ApiIncidentStatus.Forbidden);
+
+    public static ApiIncidentResult<T> Unavailable()
+        => new(ApiIncidentStatus.ApiUnavailable);
+
+    public static ApiIncidentResult<T> Failure(
+        string? message = null)
+        => new(
+            ApiIncidentStatus.ApiFailure,
             default,
             message);
 }

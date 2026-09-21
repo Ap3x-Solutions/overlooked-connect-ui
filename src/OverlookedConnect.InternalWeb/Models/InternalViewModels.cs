@@ -58,27 +58,37 @@ namespace OverlookedConnect.Internal.Models
         public IFormFile? SupportingDocument { get; set; }
     }
 
-    public class IncidentCaptureModel
-    {
-        [Required(ErrorMessage = "Severity must be selected from the list.")]
-        public string Severity { get; set; } = "";
+   public class IncidentCaptureModel
+{
+    [Required(ErrorMessage = "Severity must be selected from the list.")]
+    public string Severity { get; set; } = "";
 
-        [Required(ErrorMessage = "Incident type is required.")]
-        [Display(Name = "Incident type")]
-        public string IncidentType { get; set; } = "";
+    [Required(ErrorMessage = "Incident type is required.")]
+    [Display(Name = "Incident type")]
+    public string IncidentType { get; set; } = "";
 
-        [Required(ErrorMessage = "A description is required.")]
-        [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must be between 10 and 500 characters.")]
-        public string Description { get; set; } = "";
+    [Required(ErrorMessage = "A description is required.")]
+    [StringLength(
+        500,
+        MinimumLength = 10,
+        ErrorMessage = "Description must be between 10 and 500 characters.")]
+    public string Description { get; set; } = "";
 
-        [Display(Name = "Photographic evidence")]
-        public List<IFormFile>? Photos { get; set; }
+    [Required(ErrorMessage = "Site is required.")]
+    [Display(Name = "Site")]
+    public string Site { get; set; } = "Forzando South";
 
-        /* Captured server-side rather than from the device, so that clock drift cannot alter
-           the safety register. See NFR-08 and Section 6.4 of the documentation. */
-        [Display(Name = "Location")]
-        public string? Location { get; set; }
-    }
+    [Display(Name = "Location")]
+    public string? Location { get; set; }
+
+    /*
+     * The current incident API does not support photographic
+     * evidence yet. This property is retained so that the
+     * existing UI model remains compatible with the prototype.
+     */
+    [Display(Name = "Photographic evidence")]
+    public List<IFormFile>? Photos { get; set; }
+}
 
     public class ReportRequestModel
     {
