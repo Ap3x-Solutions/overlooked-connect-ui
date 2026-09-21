@@ -1,85 +1,266 @@
 @model List<ShiftEntry>
+
 @{
     ViewData["Title"] = "Shift Roster";
-    var days = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-    var dates = new[] { "11 Aug", "12 Aug", "13 Aug", "14 Aug", "15 Aug", "16 Aug", "17 Aug" };
-    string CellClass(string k) => k switch
+
+    var weekStart =
+        ViewBag.WeekStart is DateTime start
+            ? start
+            : DateTime.Today;
+
+    var weekEnd =
+        ViewBag.WeekEnd is DateTime end
+            ? end
+            : weekStart.AddDays(6);
+
+    var selectedSite =
+        ViewBag.Site as string
+        ?? "Forzando South";
+
+    var previousWeek =
+        weekStart.AddDays(-7);
+
+    var nextWeek =
+        weekStart.AddDays(7);
+
+    var days =
+        Enumerable.Range(0, 7)
+            .Select(i => weekStart.AddDays(i))
+            .ToArray();
+
+    string CellClass(string shiftType) =>
+        shiftType switch
+        {
+            "Day" => "rc-day",
+            "Night" => "rc-night",
+            "Leave" => "rc-leave",
+            _ => "rc-rest"
+        };
+
+    var sites = new[]
     {
-        "Day" => "rc-day", "Night" => "rc-night", "Leave" => "rc-leave", _ => "rc-rest"
+        "Forzando South",
+        "Forzando North",
+        "Dorstfontein West",
+        "Overlooked Colliery"
     };
 }
 
 <div class="page-head">
     <div>
         <h1>Shift Roster</h1>
-        <p class="sub">@ViewBag.Site &nbsp;&middot;&nbsp; August 2026</p>
+
+        <p class="sub">
+            @selectedSite
+            &nbsp;&middot;&nbsp;
+            @weekStart.ToString("MMMM yyyy")
+        </p>
     </div>
+
     <div class="d-flex gap-2">
-        <a class="btn-ovl-ghost" href="#"><i class="fas fa-file-pdf me-2"></i>Export to PDF</a>
-        <form asp-action="PublishRoster" method="post" class="d-inline">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn-ovl"><i class="fas fa-bullhorn me-2"></i>Publish &amp; notify</button>
-        </form>
+        <a class="btn-ovl-ghost"
+           asp-action="Roster"
+           asp-route-site="@selectedSite"
+           asp-route-weekStart="@previousWeek.ToString("yyyy-MM-dd")">
+
+            <i class="fas fa-chevron-left me-2"></i>
+            Previous week
+        </a>
+
+        <a class="btn-ovl-ghost"
+           asp-action="Roster"
+           asp-route-site="@selectedSite"
+           asp-route-weekStart="@nextWeek.ToString("yyyy-MM-dd")">
+
+            Next week
+            <i class="fas fa-chevron-right ms-2"></i>
+        </a>
     </div>
 </div>
 
 <div class="chip-row">
-    <a class="chip active" asp-action="Roster" asp-route-site="Forzando South">Forzando South</a>
-    <a class="chip" asp-action="Roster" asp-route-site="Forzando North">Forzando North</a>
-    <a class="chip" asp-action="Roster" asp-route-site="Dorstfontein West">Dorstfontein West</a>
-    <a class="chip" asp-action="Roster" asp-route-site="Overlooked Colliery">Overlooked Colliery</a>
+    @foreach (var site in sites)
+    {
+        var active =
+            site.Equals(
+                selectedSite,
+                StringComparison.OrdinalIgnoreCase);
+
+        <a class="chip @(active ? "active" : "")"
+           asp-action="Roster"
+           asp-route-site="@site"
+           asp-route-weekStart="@weekStart.ToString("yyyy-MM-dd")">
+            @site
+        </a>
+    }
 </div>
+
+@if (TempData["Error"] is string errorMessage)
+{
+    <div class="note note-warn mb-3">
+        <i class="fas fa-triangle-exclamation me-2"></i>
+        @errorMessage
+    </div>
+}
 
 <div class="card">
     <div class="card-body p-4">
+
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
-            <span class="card-title-sm">Week of 11 &ndash; 17 August 2026</span>
-            <div class="d-flex gap-3" style="font-size:.72rem;">
-                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#22A55B;"></span>Day</span>
-                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#3A5C8F;"></span>Night</span>
-                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#C3CCDC;"></span>Rest</span>
-                <span><span class="d-inline-block me-1" style="width:12px;height:12px;border-radius:3px;background:#E08E0B;"></span>Leave</span>
+
+            <span class="card-title-sm">
+                Week of
+                @weekStart.ToString("dd MMM")
+                &ndash;
+                @weekEnd.ToString("dd MMM yyyy")
+            </span>
+
+            <div class="d-flex gap-3"
+                 style="font-size:.72rem;">
+
+                <span>
+                    <span class="d-inline-block me-1"
+                          style="width:12px;
+                                 height:12px;
+                                 border-radius:3px;
+                                 background:#22A55B;">
+                    </span>
+                    Day
+                </span>
+
+                <span>
+                    <span class="d-inline-block me-1"
+                          style="width:12px;
+                                 height:12px;
+                                 border-radius:3px;
+                                 background:#3A5C8F;">
+                    </span>
+                    Night
+                </span>
+
+                <span>
+                    <span class="d-inline-block me-1"
+                          style="width:12px;
+                                 height:12px;
+                                 border-radius:3px;
+                                 background:#C3CCDC;">
+                    </span>
+                    Rest
+                </span>
+
+                <span>
+                    <span class="d-inline-block me-1"
+                          style="width:12px;
+                                 height:12px;
+                                 border-radius:3px;
+                                 background:#E08E0B;">
+                    </span>
+                    Leave
+                </span>
+
             </div>
         </div>
 
-        <div class="table-wrap">
-            <table class="data-table" style="min-width:900px;">
-                <thead>
-                    <tr>
-                        <th style="width:220px;">Employee</th>
-                        @for (var d = 0; d < days.Length; d++)
+        @if (Model.Count == 0)
+        {
+            <div class="text-center py-5">
+
+                <i class="fas fa-calendar-days fa-2x text-muted mb-3"></i>
+
+                <h6>No shifts scheduled</h6>
+
+                <p class="text-muted mb-0"
+                   style="font-size:.82rem;">
+
+                    No roster entries were found for
+                    <strong>@selectedSite</strong>
+                    during this week.
+
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrap">
+
+                <table class="data-table"
+                       style="min-width:900px;">
+
+                    <thead>
+                        <tr>
+
+                            <th style="width:220px;">
+                                Employee
+                            </th>
+
+                            @foreach (var day in days)
+                            {
+                                <th class="text-center">
+
+                                    @day.ToString("ddd")
+
+                                    <span class="d-block text-muted"
+                                          style="font-weight:400;
+                                                 text-transform:none;">
+
+                                        @day.ToString("dd MMM")
+
+                                    </span>
+
+                                </th>
+                            }
+
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var shift in Model)
                         {
-                            <th class="text-center">@days[d]<span class="d-block text-muted" style="font-weight:400;text-transform:none;">@dates[d]</span></th>
+                            <tr>
+
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+
+                                        <span class="avatar avatar-sm"
+                                              style="background-color:@shift.AvatarColour;">
+                                            @shift.Initials
+                                        </span>
+
+                                        <span class="t-strong">
+                                            @shift.EmployeeName
+                                        </span>
+
+                                    </div>
+                                </td>
+
+                                @foreach (var shiftType in shift.Pattern)
+                                {
+                                    <td>
+                                        <div class="roster-cell @CellClass(shiftType)">
+                                            @shiftType
+                                        </div>
+                                    </td>
+                                }
+
+                            </tr>
                         }
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var s in Model)
-                {
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="avatar avatar-sm" style="background-color:@s.AvatarColour;">@s.Initials</span>
-                                <span class="t-strong">@s.EmployeeName</span>
-                            </div>
-                        </td>
-                        @foreach (var k in s.Pattern)
-                        {
-                            <td><div class="roster-cell @CellClass(k)">@k</div></td>
-                        }
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
     </div>
 </div>
 
-<div class="note note-warn mt-3">
-    <i class="fas fa-triangle-exclamation me-2"></i>
-    S. Dlamini has requested leave 14&ndash;18 August, which overlaps rostered day shifts on 14 and 15 August. Resolve before publishing.
-</div>
+<p class="text-muted mt-3"
+   style="font-size:.78rem;">
 
-<p class="text-muted mt-3" style="font-size:.78rem;">
-    Coverage: 6 of 8 required operators rostered for the week. 2 positions unfilled on Saturday and Sunday night shift.
+    Showing live roster data for
+    <strong>@selectedSite</strong>.
+    Shift information is retrieved from the Overlooked Connect API.
+
 </p>

@@ -1,110 +1,404 @@
-@model LoginModel
+@model OverlookedConnect.Internal.Models.LoginModel
+
 @{
     ViewData["Title"] = "Sign in";
     Layout = "_LoginLayout";
 }
 
 <div class="login-split">
+
+    <!-- LEFT BRAND PANEL -->
     <div class="login-brand">
+
         <div class="d-flex align-items-center mb-5 position-relative">
-            <span class="brand-mark" style="width:44px;height:44px;background:#D4A544;color:#0F1E3A;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-weight:800;font-size:1.35rem;margin-right:14px;">O</span>
+            <span class="brand-mark"
+                  style="width:44px;height:44px;background:#D4A544;color:#0F1E3A;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;font-weight:800;font-size:1.35rem;margin-right:14px;">
+                O
+            </span>
+
             <span>
-                <b style="display:block;font-size:1.2rem;letter-spacing:1.3px;">OVERLOOKED</b>
-                <span style="color:#8FA0BE;font-size:.72rem;">Connect &middot; Internal Operations Platform</span>
+                <b style="display:block;font-size:1.2rem;letter-spacing:1.3px;">
+                    OVERLOOKED
+                </b>
+
+                <span style="color:#8FA0BE;font-size:.72rem;">
+                    Connect &middot; Internal Operations Platform
+                </span>
             </span>
         </div>
 
-        <h2>One platform for<br />people, safety and<br />suppliers.</h2>
-        <p style="color:#C6D2E6;font-size:.95rem;line-height:1.8;max-width:36rem;margin-top:24px;" class="position-relative">
-            Employee records, leave and shift scheduling, safety incidents, supplier onboarding and CSR
-            reporting &mdash; in a single auditable system.
+        <h2>
+            One platform for<br />
+            people, safety and<br />
+            suppliers.
+        </h2>
+
+        <p class="position-relative"
+           style="color:#C6D2E6;font-size:.95rem;line-height:1.8;max-width:36rem;margin-top:24px;">
+            Employee records, leave and shift scheduling, safety incidents,
+            supplier onboarding and CSR reporting &mdash; in a single auditable system.
         </p>
 
         <div class="d-flex gap-5 mt-5 position-relative">
-            <div><div style="color:#D4A544;font-size:1.6rem;font-weight:800;">248</div><div style="color:#8FA0BE;font-size:.72rem;">Employees</div></div>
-            <div><div style="color:#D4A544;font-size:1.6rem;font-weight:800;">5</div><div style="color:#8FA0BE;font-size:.72rem;">Business units</div></div>
-            <div><div style="color:#D4A544;font-size:1.6rem;font-weight:800;">0.11</div><div style="color:#8FA0BE;font-size:.72rem;">LTIFR</div></div>
+
+            <div>
+                <div style="color:#D4A544;font-size:1.6rem;font-weight:800;">
+                    248
+                </div>
+                <div style="color:#8FA0BE;font-size:.72rem;">
+                    Employees
+                </div>
+            </div>
+
+            <div>
+                <div style="color:#D4A544;font-size:1.6rem;font-weight:800;">
+                    5
+                </div>
+                <div style="color:#8FA0BE;font-size:.72rem;">
+                    Business units
+                </div>
+            </div>
+
+            <div>
+                <div style="color:#D4A544;font-size:1.6rem;font-weight:800;">
+                    0.11
+                </div>
+                <div style="color:#8FA0BE;font-size:.72rem;">
+                    LTIFR
+                </div>
+            </div>
+
         </div>
 
-        <p class="position-relative" style="color:#7E8FAC;font-size:.72rem;margin-top:auto;padding-top:48px;">
-            <i class="fas fa-shield-halved me-2"></i>Protected by Microsoft Entra External ID &middot; MFA enforced
+        <p class="position-relative"
+           style="color:#7E8FAC;font-size:.72rem;margin-top:auto;padding-top:48px;">
+            <i class="fas fa-shield-halved me-2"></i>
+            Secure access &middot; Role-based authorization
         </p>
+
     </div>
 
+
+    <!-- RIGHT LOGIN PANEL -->
     <div class="login-form">
+
         <div class="inner">
-            <h1 class="mb-2" style="font-size:1.9rem;">Sign in</h1>
-            <p class="text-muted mb-4" style="font-size:.85rem;">Use your OVL work account to continue.</p>
 
-            <form asp-action="Login" method="post" class="needs-validation" novalidate>
+            <h1 class="mb-2" style="font-size:1.9rem;">
+                Sign in
+            </h1>
+
+            <p class="text-muted mb-4" style="font-size:.85rem;">
+                Use your Overlooked Connect account to continue.
+            </p>
+
+
+            <!-- LOGOUT / SUCCESS MESSAGE -->
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="alert alert-success mb-4"
+                     role="alert">
+                    <i class="fas fa-circle-check me-2"></i>
+                    @successMessage
+                </div>
+            }
+
+
+            <!-- LOGIN FORM -->
+            <form asp-controller="Account"
+                  asp-action="Login"
+                  method="post"
+                  id="loginForm"
+                  class="needs-validation"
+                  novalidate>
+
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
 
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email address</label>
-                    <input asp-for="Email" class="form-control" placeholder="n.sithole@overlookedgroup.co.za" />
-                    <span asp-validation-for="Email" class="text-danger small"></span>
+
+                <!-- SERVER / API ERRORS -->
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger small mb-3">
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label">Password</label>
-                    <input asp-for="Password" type="password" class="form-control" placeholder="••••••••••••" />
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
 
+                <!-- EMAIL -->
                 <div class="mb-3">
-                    <label asp-for="DemoRole" class="form-label">Sign in as (demonstration role)</label>
-                    <select asp-for="DemoRole" class="form-select">
-                        <option value="executive">Executive &mdash; T. Mahlangu</option>
-                        <option value="hr">HR &amp; Operations &mdash; N. Sithole</option>
-                        <option value="safety">Safety Officer &mdash; P. Naidoo</option>
-                        <option value="procurement">Procurement &mdash; S. Nkosi</option>
-                        <option value="employee">Employee (staff app) &mdash; S. Dlamini</option>
-                    </select>
-                    <div class="form-text" style="font-size:.72rem;">
-                        Task 1 only. In Task 2 the role is read from the Entra External ID role claim rather than selected here.
+
+                    <label asp-for="Email"
+                           class="form-label">
+                        Email address
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+
+                        <input asp-for="Email"
+                               type="email"
+                               class="form-control"
+                               placeholder="name@overlookedgroup.co.za"
+                               autocomplete="username"
+                               inputmode="email"
+                               autofocus />
+
                     </div>
-                    <span asp-validation-for="DemoRole" class="text-danger small"></span>
+
+                    <span asp-validation-for="Email"
+                          class="text-danger small">
+                    </span>
+
                 </div>
 
+
+                <!-- PASSWORD -->
+                <div class="mb-3">
+
+                    <label asp-for="Password"
+                           class="form-label">
+                        Password
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+
+                        <input asp-for="Password"
+                               type="password"
+                               class="form-control"
+                               id="passwordInput"
+                               placeholder="Enter your password"
+                               autocomplete="current-password" />
+
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                id="togglePassword"
+                                aria-label="Show password"
+                                title="Show password">
+
+                            <i class="fas fa-eye"
+                               id="passwordIcon"></i>
+
+                        </button>
+
+                    </div>
+
+                    <span asp-validation-for="Password"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+
+                <!-- REMEMBER ME -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
+
                     <div class="form-check">
-                        <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
-                        <label asp-for="RememberMe" class="form-check-label" style="font-size:.78rem;font-weight:400;">Keep me signed in</label>
+
+                        <input asp-for="RememberMe"
+                               class="form-check-input"
+                               type="checkbox" />
+
+                        <label asp-for="RememberMe"
+                               class="form-check-label"
+                               style="font-size:.78rem;font-weight:400;">
+                            Keep me signed in
+                        </label>
+
                     </div>
-                    <a href="#" style="font-size:.78rem;font-weight:600;color:#0F1E3A;">Forgot password?</a>
+
                 </div>
 
-                <button type="submit" class="btn-ovl w-100" style="padding:13px;">Sign in</button>
 
-                <div class="d-flex align-items-center gap-3 my-4">
-                    <hr class="flex-grow-1 m-0" /><span class="text-muted" style="font-size:.75rem;">or</span><hr class="flex-grow-1 m-0" />
-                </div>
+                <!-- SIGN IN -->
+                <button type="submit"
+                        id="loginButton"
+                        class="btn-ovl w-100"
+                        style="padding:13px;">
 
-                <button type="button" class="btn-ovl-ghost w-100" style="padding:13px;">
-                    <i class="fab fa-microsoft me-2" style="color:#0F6CBD;"></i>Sign in with Microsoft
+                    <span id="loginButtonNormal">
+                        <i class="fas fa-right-to-bracket me-2"></i>
+                        Sign in
+                    </span>
+
+                    <span id="loginButtonLoading"
+                          class="d-none">
+
+                        <span class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true">
+                        </span>
+
+                        Signing in...
+
+                    </span>
+
                 </button>
 
-                @if (ViewBag.PublicWebUrl != null)
-                {
-                    <div class="note note-info mt-4">
-                        <i class="fas fa-arrow-right-to-bracket me-2"></i>
-                        You can also sign in from the
-                        <a href="@ViewBag.PublicWebUrl/StaffAccess/Login" style="font-weight:700;color:#1D4F8F;">public website</a>
-                        and be brought straight here.
-                    </div>
-                }
 
-                <div class="note note-warn mt-3">
-                    Multi-factor authentication is required for the Executive, HR, Safety and Procurement roles.
+                <!-- SECURITY NOTE -->
+                <div class="note note-warn mt-4">
+
+                    <div class="d-flex align-items-start">
+
+                        <i class="fas fa-shield-halved me-2 mt-1"></i>
+
+                        <span>
+                            Access to internal features is controlled by
+                            your assigned account role.
+                        </span>
+
+                    </div>
+
                 </div>
 
-                <p class="text-center text-muted mt-4 mb-0" style="font-size:.72rem;">
-                    Staff application? <a asp-controller="Staff" asp-action="Index" style="font-weight:600;color:#0F1E3A;">Open the mobile view</a>
+
+                <p class="text-center text-muted mt-4 mb-0"
+                   style="font-size:.72rem;">
+                    Protected Overlooked Group system &middot;
+                    Authorized users only
                 </p>
+
             </form>
+
         </div>
+
     </div>
+
 </div>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const loginForm =
+                document.getElementById("loginForm");
+
+            const loginButton =
+                document.getElementById("loginButton");
+
+            const loginButtonNormal =
+                document.getElementById("loginButtonNormal");
+
+            const loginButtonLoading =
+                document.getElementById("loginButtonLoading");
+
+            const passwordInput =
+                document.getElementById("passwordInput");
+
+            const togglePassword =
+                document.getElementById("togglePassword");
+
+            const passwordIcon =
+                document.getElementById("passwordIcon");
+
+
+            // ------------------------------------------------------
+            // SHOW / HIDE PASSWORD
+            // ------------------------------------------------------
+
+            if (togglePassword && passwordInput) {
+
+                togglePassword.addEventListener("click", function () {
+
+                    const isPassword =
+                        passwordInput.type === "password";
+
+                    passwordInput.type =
+                        isPassword ? "text" : "password";
+
+
+                    if (passwordIcon) {
+
+                        passwordIcon.classList.toggle(
+                            "fa-eye",
+                            !isPassword
+                        );
+
+                        passwordIcon.classList.toggle(
+                            "fa-eye-slash",
+                            isPassword
+                        );
+                    }
+
+
+                    const label =
+                        isPassword
+                            ? "Hide password"
+                            : "Show password";
+
+                    togglePassword.setAttribute(
+                        "aria-label",
+                        label
+                    );
+
+                    togglePassword.setAttribute(
+                        "title",
+                        label
+                    );
+
+                    passwordInput.focus();
+                });
+            }
+
+
+            // ------------------------------------------------------
+            // LOGIN SUBMISSION
+            // ------------------------------------------------------
+
+            if (loginForm) {
+
+                loginForm.addEventListener("submit", function (event) {
+
+                    // Browser / Bootstrap validation
+                    if (!loginForm.checkValidity()) {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        loginForm.classList.add(
+                            "was-validated"
+                        );
+
+                        return;
+                    }
+
+
+                    // Prevent accidental duplicate login requests
+                    if (loginButton) {
+                        loginButton.disabled = true;
+                    }
+
+
+                    // Hide normal text
+                    if (loginButtonNormal) {
+                        loginButtonNormal.classList.add(
+                            "d-none"
+                        );
+                    }
+
+
+                    // Show loading indicator
+                    if (loginButtonLoading) {
+                        loginButtonLoading.classList.remove(
+                            "d-none"
+                        );
+                    }
+
+
+                    loginForm.classList.add(
+                        "was-validated"
+                    );
+                });
+            }
+
+        });
+    </script>
+}
