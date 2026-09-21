@@ -160,24 +160,153 @@ namespace OverlookedConnect.Internal.Controllers
         [HttpGet]
         public IActionResult Incident()
         {
+            var accessToken =
+                HttpContext.Session.GetString("AccessToken");
+
+            var role =
+                HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+            }
+
+            if (!string.Equals(
+                    role,
+                    "Employee",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Error"] =
+                    "Only employees can submit incident reports.";
+
+                return RedirectToAction(
+                    "Index",
+                    "Dashboard");
+            }
+
             return View(
-                new IncidentCaptureModel());
+                new IncidentCaptureModel
+                {
+                    Site = "Forzando South"
+                });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Incident(
-            IncidentCaptureModel model)
+        public async Task<IActionResult> Incident(
+            IncidentCaptureModel model,
+            CancellationToken cancellationToken)
         {
+            var accessToken =
+                HttpContext.Session.GetString("AccessToken");
+
+            var role =
+                HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+            }
+
+            if (!string.Equals(
+                    role,
+                    "Employee",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Error"] =
+                    "Only employees can submit incident reports.";
+
+                return RedirectToAction(
+                    "Index",
+                    "Dashboard");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            TempData["SuccessMessage"] =
-                "Incident reporting is not yet connected to the API.";
+            var severity =
+                string.Equals(
+                    model.Severity,
+                    "Fatal / LTI",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? "Fatal"
+                    : model.Severity.Trim();
 
-            return RedirectToAction("Index");
+            var request =
+                new ApiCreateIncidentRequest
+                {
+                    Severity = severity,
+                    IncidentType =
+                        model.IncidentType.Trim(),
+                    Description =
+                        model.Description.Trim(),
+                    Site =
+                        model.Site.Trim(),
+                    Location =
+                        string.IsNullOrWhiteSpace(model.Location)
+                            ? null
+                            : model.Location.Trim()
+                };
+
+            var result =
+                await _apiClient.CreateIncidentAsync(
+                    accessToken,
+                    request,
+                    cancellationToken);
+
+            switch (result.Status)
+            {
+                case ApiIncidentStatus.Success:
+                    var incident = result.Data!;
+
+                    TempData["SuccessMessage"] =
+                        $"Incident {incident.Reference} was reported successfully.";
+
+                    if (incident.RequiresEscalation)
+                    {
+                        TempData["IncidentEscalation"] =
+                            "This incident requires escalation to the Safety team.";
+                    }
+
+                    return RedirectToAction("Index");
+
+                case ApiIncidentStatus.Unauthorized:
+                    HttpContext.Session.Clear();
+
+                    TempData["Error"] =
+                        "Your session has expired. Please sign in again.";
+
+                    return RedirectToAction(
+                        "Login",
+                        "Account");
+
+                case ApiIncidentStatus.Forbidden:
+                    ModelState.AddModelError(
+                        string.Empty,
+                        "You do not have permission to submit incident reports.");
+                    break;
+
+                case ApiIncidentStatus.ApiUnavailable:
+                    ModelState.AddModelError(
+                        string.Empty,
+                        "The Overlooked Connect service is currently unavailable. Please try again.");
+                    break;
+
+                case ApiIncidentStatus.ApiFailure:
+                    ModelState.AddModelError(
+                        string.Empty,
+                        result.ErrorMessage ??
+                        "The incident could not be submitted.");
+                    break;
+            }
+
+            return View(model);
         }
 
         /* =========================================================

@@ -1,77 +1,669 @@
 @model IncidentCaptureModel
+
 @{
     ViewData["Title"] = "Report Incident";
-    Layout = "_StaffLayout";
+
+    var employeeName =
+        Context.Session.GetString("UserName") ?? "Employee";
+
+    var employeeNumber =
+        Context.Session.GetString("EmployeeNumber") ?? "";
 }
 
-<div class="phone-appbar">
-    <div class="d-flex justify-content-between align-items-start">
-        <div><h1>Report an incident</h1><div class="sub">Forzando South &middot; Section 4B</div></div>
-        <span class="pill" style="background:#3A2E12;color:#D4A544;">OFFLINE</span>
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+
+    <div>
+
+        <h1 style="
+            margin:0;
+            color:#0F1E3A;
+            font-size:1.45rem;
+            font-weight:800;">
+
+            Report an Incident
+
+        </h1>
+
+        <div class="text-muted mt-1"
+             style="font-size:.8rem;">
+
+            Submit a workplace safety incident to Overlooked Connect
+
+        </div>
+
     </div>
+
+
+    <div class="d-flex align-items-center gap-2">
+
+        <span class="pill pill-ok">
+
+            <i class="fas fa-circle me-1"
+               style="font-size:.45rem;"></i>
+
+            ONLINE
+
+        </span>
+
+
+        <a asp-controller="Staff"
+           asp-action="Index"
+           class="btn-ovl-ghost text-decoration-none">
+
+            <i class="fas fa-arrow-left me-2"></i>
+            Back to dashboard
+
+        </a>
+
+    </div>
+
 </div>
 
-<div style="background:#152744;padding:12px 20px;color:#8FA0BE;font-size:.7rem;">
-    Captured as S. Dlamini (EMP-1042) &middot; 22 Jul 09:41 &middot; timestamp set server-side
-</div>
 
-<div class="phone-body">
-    <form asp-action="Incident" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-        @Html.AntiForgeryToken()
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mb-4"
+         role="alert">
 
-        <label class="form-label">Severity *</label>
-        <p class="text-muted" style="font-size:.68rem;margin-top:-4px;">Must be selected from the list &mdash; free text is not accepted.</p>
-        <input type="hidden" asp-for="Severity" id="SeverityValue" />
-        <div class="d-flex gap-2 flex-wrap mb-2">
-            <span class="severity-chip" data-severity="Low" data-tone="on-low">Low</span>
-            <span class="severity-chip" data-severity="Medium" data-tone="on-med">Medium</span>
-            <span class="severity-chip on-high" data-severity="High" data-tone="on-high">High</span>
-            <span class="severity-chip" data-severity="Fatal / LTI" data-tone="on-fatal">Fatal / LTI</span>
-        </div>
-        <span asp-validation-for="Severity" class="text-danger small"></span>
+        <i class="fas fa-circle-check me-2"></i>
+        @TempData["SuccessMessage"]
 
-        <div class="note note-bad mb-3" id="severityWarning">
-            High severity escalates to the Safety Manager immediately.
-        </div>
+    </div>
+}
 
-        <label asp-for="IncidentType" class="form-label">Incident type *</label>
-        <select asp-for="IncidentType" class="form-select mb-3">
-            <option>Equipment / guarding failure</option><option>Slip, trip or fall</option>
-            <option>Vehicle or mobile plant</option><option>Fall of ground</option><option>Near miss</option>
-        </select>
-        <span asp-validation-for="IncidentType" class="text-danger small"></span>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning mb-4"
+         role="alert">
 
-        <label asp-for="Description" class="form-label">Description *</label>
-        <textarea asp-for="Description" class="form-control mb-1" rows="4" maxlength="500" data-counter="descCount"
-                  placeholder="Conveyor guard on CV-04 found detached during routine walk-through. Belt stopped and area barricaded. No injury sustained."></textarea>
-        <div class="text-muted mb-3" style="font-size:.68rem;"><span id="descCount">0 / 500</span></div>
-        <span asp-validation-for="Description" class="text-danger small"></span>
+        <i class="fas fa-triangle-exclamation me-2"></i>
+        @TempData["Error"]
 
-        <label class="form-label">Photographic evidence</label>
-        <p class="text-muted" style="font-size:.68rem;margin-top:-4px;">Captured from the device camera &mdash; 2 attached</p>
-        <div class="row g-2 mb-3">
-            <div class="col-4"><div class="photo-tile"></div></div>
-            <div class="col-4"><div class="photo-tile" style="background:linear-gradient(118deg,#3A5C8F,#6C8EBF);"></div></div>
-            <div class="col-4">
-                <label class="photo-add w-100 mb-0" for="Photos"><span><i class="fas fa-plus d-block text-center mb-1"></i>Add photo</span></label>
-                <input asp-for="Photos" type="file" id="Photos" multiple accept="image/*" class="d-none" />
+    </div>
+}
+
+
+<div class="row g-4">
+
+    <!-- INCIDENT FORM -->
+    <div class="col-12 col-xl-8">
+
+        <div class="card">
+
+            <div class="card-body p-4">
+
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+
+                    <span class="d-grid"
+                          style="
+                            width:46px;
+                            height:46px;
+                            min-width:46px;
+                            border-radius:10px;
+                            background:#FBE9E7;
+                            color:#C0392B;
+                            place-items:center;">
+
+                        <i class="fas fa-triangle-exclamation"
+                           style="font-size:1.15rem;"></i>
+
+                    </span>
+
+
+                    <div>
+
+                        <div class="card-title-sm">
+                            Incident details
+                        </div>
+
+                        <div class="text-muted mt-1"
+                             style="font-size:.74rem;">
+                            Provide accurate information about the workplace incident.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <form asp-controller="Staff"
+                      asp-action="Incident"
+                      method="post"
+                      class="needs-validation"
+                      novalidate>
+
+                    @Html.AntiForgeryToken()
+
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger small mb-3">
+                    </div>
+
+
+                    <!-- SEVERITY -->
+
+                    <div class="mb-4">
+
+                        <label asp-for="Severity"
+                               class="form-label">
+                            Severity *
+                        </label>
+
+                        <div class="text-muted mb-3"
+                             style="font-size:.7rem;">
+                            Select the severity that best describes the incident.
+                        </div>
+
+
+                        <input type="hidden"
+                               asp-for="Severity"
+                               id="SeverityValue" />
+
+
+                        <div class="d-flex gap-2 flex-wrap">
+
+                            <button type="button"
+                                    class="severity-chip"
+                                    data-severity="Low"
+                                    data-tone="on-low">
+                                Low
+                            </button>
+
+                            <button type="button"
+                                    class="severity-chip"
+                                    data-severity="Medium"
+                                    data-tone="on-med">
+                                Medium
+                            </button>
+
+                            <button type="button"
+                                    class="severity-chip"
+                                    data-severity="High"
+                                    data-tone="on-high">
+                                High
+                            </button>
+
+                            <button type="button"
+                                    class="severity-chip"
+                                    data-severity="Fatal"
+                                    data-tone="on-fatal">
+                                Fatal / LTI
+                            </button>
+
+                        </div>
+
+
+                        <span asp-validation-for="Severity"
+                              class="text-danger small d-block mt-2">
+                        </span>
+
+                    </div>
+
+
+                    <div class="note note-bad mb-4"
+                         id="severityWarning"
+                         style="display:none;">
+
+                        <i class="fas fa-triangle-exclamation me-2"></i>
+
+                        High and fatal incidents require escalation to the Safety team.
+
+                    </div>
+
+
+                    <div class="row g-3">
+
+                        <!-- INCIDENT TYPE -->
+
+                        <div class="col-12 col-md-6">
+
+                            <label asp-for="IncidentType"
+                                   class="form-label">
+                                Incident type *
+                            </label>
+
+                            <select asp-for="IncidentType"
+                                    class="form-select">
+
+                                <option value="">
+                                    Select incident type
+                                </option>
+
+                                <option value="Equipment / guarding failure">
+                                    Equipment / guarding failure
+                                </option>
+
+                                <option value="Slip, trip or fall">
+                                    Slip, trip or fall
+                                </option>
+
+                                <option value="Vehicle or mobile plant">
+                                    Vehicle or mobile plant
+                                </option>
+
+                                <option value="Fall of ground">
+                                    Fall of ground
+                                </option>
+
+                                <option value="Near miss">
+                                    Near miss
+                                </option>
+
+                            </select>
+
+                            <span asp-validation-for="IncidentType"
+                                  class="text-danger small">
+                            </span>
+
+                        </div>
+
+
+                        <!-- SITE -->
+
+                        <div class="col-12 col-md-6">
+
+                            <label asp-for="Site"
+                                   class="form-label">
+                                Site *
+                            </label>
+
+                            <select asp-for="Site"
+                                    class="form-select">
+
+                                <option value="">
+                                    Select site
+                                </option>
+
+                                <option value="Forzando South">
+                                    Forzando South
+                                </option>
+
+                                <option value="Forzando North">
+                                    Forzando North
+                                </option>
+
+                                <option value="Dorstfontein West">
+                                    Dorstfontein West
+                                </option>
+
+                                <option value="Overlooked Colliery">
+                                    Overlooked Colliery
+                                </option>
+
+                            </select>
+
+                            <span asp-validation-for="Site"
+                                  class="text-danger small">
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="mt-3 mb-3">
+
+                        <label asp-for="Description"
+                               class="form-label">
+                            Description *
+                        </label>
+
+                        <textarea asp-for="Description"
+                                  class="form-control"
+                                  rows="6"
+                                  maxlength="500"
+                                  id="Description"
+                                  placeholder="Describe what happened, where it happened, and any immediate action taken."></textarea>
+
+
+                        <div class="d-flex justify-content-between mt-1">
+
+                            <span asp-validation-for="Description"
+                                  class="text-danger small">
+                            </span>
+
+                            <span id="descCount"
+                                  class="text-muted"
+                                  style="font-size:.68rem;">
+                                0 / 500
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- LOCATION -->
+
+                    <div class="mb-4">
+
+                        <label asp-for="Location"
+                               class="form-label">
+                            Specific location
+                        </label>
+
+                        <input asp-for="Location"
+                               class="form-control"
+                               maxlength="80"
+                               placeholder="e.g. Section 4B, Conveyor CV-04" />
+
+                        <span asp-validation-for="Location"
+                              class="text-danger small">
+                        </span>
+
+                    </div>
+
+
+                    <div class="note note-warn mb-4">
+
+                        <i class="fas fa-circle-info me-2"></i>
+
+                        Your employee account and report timestamp are recorded
+                        by the server when the incident is submitted.
+
+                    </div>
+
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <button type="submit"
+                                class="btn-ovl"
+                                style="
+                                    min-width:210px;
+                                    background-color:#C0392B;">
+
+                            <i class="fas fa-triangle-exclamation me-2"></i>
+                            Submit incident report
+
+                        </button>
+
+
+                        <a asp-controller="Staff"
+                           asp-action="Index"
+                           class="btn-ovl-ghost text-decoration-none">
+
+                            Cancel
+
+                        </a>
+
+                    </div>
+
+                </form>
+
             </div>
+
         </div>
 
-        <label class="form-label">Location</label>
-        <div class="card mb-3"><div class="card-body p-3 d-flex align-items-center gap-3">
-            <span class="d-grid" style="width:32px;height:32px;border-radius:50%;background:#22A55B;place-items:center;color:#fff;"><i class="fas fa-location-crosshairs" style="font-size:.75rem;"></i></span>
-            <span style="font-size:.78rem;"><b>GPS captured automatically</b><span class="d-block text-muted" style="font-size:.68rem;">@Model.Location</span></span>
-        </div></div>
+    </div>
 
-        <div class="note note-warn mb-3">
-            <i class="fas fa-flag me-2"></i>
-            No signal &mdash; this report will sync automatically when connectivity returns. Capture time is preserved.
+
+    <!-- RIGHT SIDE -->
+    <div class="col-12 col-xl-4">
+
+
+        <div class="card mb-3">
+
+            <div class="card-body p-4">
+
+                <div class="card-title-sm mb-3">
+                    Reporting employee
+                </div>
+
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <span class="avatar avatar-md"
+                          style="background-color:#0F1E3A;">
+
+                        @{
+                            var initials =
+                                Context.Session.GetString("UserInitials") ?? "E";
+                        }
+
+                        @initials
+
+                    </span>
+
+
+                    <div>
+
+                        <div style="
+                            font-size:.82rem;
+                            font-weight:700;
+                            color:#0F1E3A;">
+
+                            @employeeName
+
+                        </div>
+
+
+                        @if (!string.IsNullOrWhiteSpace(employeeNumber))
+                        {
+                            <div class="text-muted mt-1"
+                                 style="font-size:.7rem;">
+
+                                @employeeNumber
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <button type="submit" class="btn-ovl w-100 mb-2" style="background-color:#C0392B;padding:14px;">Submit incident report</button>
-        <a class="btn-ovl-ghost w-100 d-block text-center" asp-action="Index">Save as draft</a>
-    </form>
+
+        <div class="card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <i class="fas fa-shield-halved"
+                       style="color:#C0392B;"></i>
+
+                    <div class="card-title-sm">
+                        Safety reporting
+                    </div>
+
+                </div>
+
+
+                <p class="text-muted mb-3"
+                   style="
+                        font-size:.74rem;
+                        line-height:1.6;">
+
+                    Use this form to report workplace safety incidents,
+                    hazards and near misses.
+
+                </p>
+
+
+                <div class="border-top pt-3">
+
+                    <div class="d-flex gap-2 mb-2">
+
+                        <i class="fas fa-circle-check mt-1"
+                           style="
+                                color:#22A55B;
+                                font-size:.75rem;">
+                        </i>
+
+                        <span style="
+                            font-size:.72rem;
+                            color:#5B6675;">
+
+                            Your employee account is attached automatically.
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="d-flex gap-2 mb-2">
+
+                        <i class="fas fa-circle-check mt-1"
+                           style="
+                                color:#22A55B;
+                                font-size:.75rem;">
+                        </i>
+
+                        <span style="
+                            font-size:.72rem;
+                            color:#5B6675;">
+
+                            The server records the report timestamp.
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="d-flex gap-2">
+
+                        <i class="fas fa-circle-check mt-1"
+                           style="
+                                color:#22A55B;
+                                font-size:.75rem;">
+                        </i>
+
+                        <span style="
+                            font-size:.72rem;
+                            color:#5B6675;">
+
+                            Submitted reports are sent to the safety workflow.
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const severityInput =
+                document.getElementById("SeverityValue");
+
+            const warning =
+                document.getElementById("severityWarning");
+
+            const chips =
+                document.querySelectorAll(".severity-chip");
+
+
+            function updateSeverity(value) {
+
+                if (!severityInput) {
+                    return;
+                }
+
+                severityInput.value = value;
+
+
+                chips.forEach(function (chip) {
+
+                    chip.classList.remove(
+                        "on-low",
+                        "on-med",
+                        "on-high",
+                        "on-fatal");
+
+                    if (chip.dataset.severity === value) {
+
+                        chip.classList.add(
+                            chip.dataset.tone);
+                    }
+
+                });
+
+
+                if (warning) {
+
+                    warning.style.display =
+                        value === "High" ||
+                        value === "Fatal"
+                            ? "block"
+                            : "none";
+                }
+
+
+                severityInput.dispatchEvent(
+                    new Event(
+                        "change",
+                        { bubbles: true }));
+            }
+
+
+            chips.forEach(function (chip) {
+
+                chip.addEventListener(
+                    "click",
+                    function () {
+
+                        updateSeverity(
+                            this.dataset.severity);
+                    });
+            });
+
+
+            if (severityInput &&
+                severityInput.value) {
+
+                updateSeverity(
+                    severityInput.value);
+            }
+
+
+            const description =
+                document.getElementById("Description");
+
+            const counter =
+                document.getElementById("descCount");
+
+
+            function updateCounter() {
+
+                if (!description ||
+                    !counter) {
+
+                    return;
+                }
+
+                counter.textContent =
+                    `${description.value.length} / 500`;
+            }
+
+
+            if (description) {
+
+                description.addEventListener(
+                    "input",
+                    updateCounter);
+
+                updateCounter();
+            }
+
+        });
+    </script>
+}
