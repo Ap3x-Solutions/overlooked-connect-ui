@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
 
@@ -54,7 +54,7 @@ public sealed class AccountController : Controller
             model.Password,
             cancellationToken);
 
-        
+
         if (!result.IsSuccess ||
     result.Response is null)
 {
@@ -174,6 +174,72 @@ public sealed class AccountController : Controller
             "Dashboard");
     }
 
+// =========================================================
+// PUBLIC WEB -> INTERNAL WEB SSO
+// =========================================================
+
+/// <summary>
+/// Receives a JWT from the PublicWeb staff sign-in handoff.
+///
+/// The token is never trusted directly. It is revalidated against
+/// GET /api/auth/me before an InternalWeb session is created.
+/// </summary>
+[HttpPost]
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> Sso(
+    string token,
+    CancellationToken cancellationToken)
+{
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        TempData["ErrorMessage"] =
+            "Sign-in could not be completed. Please sign in again.";
+
+        return RedirectToAction(nameof(Login));
+    }
+
+    ApiIdentity? identity;
+
+    try
+    {
+       identity =
+    await _apiClient.ValidateTokenAsync(
+        token,
+        cancellationToken);
+    }
+    catch (HttpRequestException)
+    {
+        TempData["ErrorMessage"] =
+            "The sign-in service is currently unavailable. Please try again.";
+
+        return RedirectToAction(nameof(Login));
+    }
+
+    if (identity is null ||
+        string.IsNullOrWhiteSpace(identity.Role))
+    {
+        TempData["ErrorMessage"] =
+            "That sign-in session is no longer valid. Please sign in again.";
+
+        return RedirectToAction(nameof(Login));
+    }
+
+    var fullName =
+        string.IsNullOrWhiteSpace(identity.Name)
+            ? "Overlooked Connect User"
+            : identity.Name;
+
+    EstablishSsoSession(
+        token,
+        fullName,
+        identity.Role,
+        identity.EmployeeNumber);
+
+    TempData["SuccessMessage"] =
+        $"Signed in from the public website as {fullName}.";
+
+    return LandingForSso(identity.Role);
+}
 
     // ------------------------------------------------------------
     // LOGOUT
@@ -261,4 +327,72 @@ public sealed class AccountController : Controller
                 names[^1][0])
             .ToUpperInvariant();
     }
+    /// <summary>
+/// Establishes the InternalWeb session after the API has validated
+/// the JWT received from PublicWeb.
+/// </summary>
+private void EstablishSsoSession(
+    string accessToken,
+    string fullName,
+    string role,
+    string? employeeNumber)
+{
+    var initials =
+        string.Concat(
+            fullName
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries)
+                .Take(2)
+                .Where(part => part.Length > 0)
+                .Select(part => part[0]))
+            .ToUpperInvariant();
+
+    HttpContext.Session.SetString(
+        "AccessToken",
+        accessToken);
+
+    HttpContext.Session.SetString(
+        "UserName",
+        fullName);
+
+    HttpContext.Session.SetString(
+        "UserInitials",
+        string.IsNullOrWhiteSpace(initials)
+            ? "OC"
+            : initials);
+
+    HttpContext.Session.SetString(
+        "UserRole",
+        role);
+
+    HttpContext.Session.SetString(
+        "RoleKey",
+        role.ToLowerInvariant());
+
+    if (!string.IsNullOrWhiteSpace(employeeNumber))
+    {
+        HttpContext.Session.SetString(
+            "EmployeeNumber",
+            employeeNumber);
+    }
+}
+
+/// <summary>
+/// Sends employees to the employee portal and other staff
+/// roles to the internal dashboard.
+/// </summary>
+private IActionResult LandingForSso(string role)
+{
+    return string.Equals(
+        role,
+        "Employee",
+        StringComparison.OrdinalIgnoreCase)
+            ? RedirectToAction(
+                "Index",
+                "Staff")
+            : RedirectToAction(
+                "Index",
+                "Dashboard");
+}
 }

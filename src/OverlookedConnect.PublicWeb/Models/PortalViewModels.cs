@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations; /* [Microsoft Learn, [s.a.]] */
+using System.ComponentModel.DataAnnotations; /* [Microsoft Learn, [s.a.]] */
 using Microsoft.AspNetCore.Http;
 
 /* 
@@ -97,6 +97,16 @@ namespace OverlookedConnect.PublicWeb.Models
         [Display(Name = "Contact number")]
         public string ContactNumber { get; set; }
 
+        /*
+         Task 2 (OVC-247): the API creates a Supplier account on registration so the applicant can
+         sign in and track their own application. Required by POST /api/suppliers.
+        */
+        [Required(ErrorMessage = "Choose a password so you can track your application.")]
+        [DataType(DataType.Password)]
+        [StringLength(128, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters.")]
+        [Display(Name = "Choose a password")]
+        public string Password { get; set; } = "";
+
         [Required(ErrorMessage = "Province is required.")]
         [StringLength(50)]
         public string Province { get; set; }
@@ -143,11 +153,51 @@ namespace OverlookedConnect.PublicWeb.Models
         [StringLength(1000, MinimumLength = 10, ErrorMessage = "Message must be between 10 and 1000 characters.")]
         public string Message { get; set; }
     }
-}
 
-/*
-    Reference List:
-        - Microsoft Learn. [s.a.]. Model Binding in ASP.NET Core. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding> [14 August 2026].
-        - Microsoft Learn. [s.a.]. System.ComponentModel.DataAnnotations Namespace. [online]. Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations> [14 August 2026].
-        - Microsoft Learn. [s.a.]. RequiredAttribute Class. [online]. Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.requiredattribute> [14 August 2026].
-*/
+    /*
+     Staff sign-in from the public website (OVC-267).
+     Credentials are posted to the shared API; nothing is validated locally beyond presence and
+     shape, because the API is the only authority on whether an account exists.
+    */
+    public class StaffLoginModel
+    {
+        [Required(ErrorMessage = "Email address is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email address.")]
+        [StringLength(256)]
+        [Display(Name = "Email address")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Password is required.")]
+        [DataType(DataType.Password)]
+        [StringLength(128, MinimumLength = 6)]
+        public string Password { get; set; } = "";
+    }
+
+    /*
+     Carries the issued token to the internal platform's Sso endpoint. Rendered into a form that
+     posts immediately; the token is never placed in a URL.
+    */
+    public class StaffHandoffModel
+    {
+        public string PostUrl { get; set; } = "";
+        public string AccessToken { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public string Role { get; set; } = "";
+    }
+
+    /*
+     Read-only view of a supplier's own application, for the public status tracker (Figure 22).
+     Populated from GET /api/suppliers/mine.
+    */
+    public class SupplierStatusModel
+    {
+        public string Reference { get; set; } = "";
+        public string CompanyName { get; set; } = "";
+        public string Status { get; set; } = "";
+        public string? VendorNumber { get; set; }
+        public DateTime SubmittedAt { get; set; }
+        public int DocumentsVerified { get; set; }
+        public int DocumentsRequired { get; set; }
+        public List<(string DocType, string Status)> Documents { get; set; } = new();
+    }
+}

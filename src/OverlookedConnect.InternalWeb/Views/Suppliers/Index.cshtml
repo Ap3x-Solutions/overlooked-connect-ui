@@ -10,7 +10,17 @@
         <h1>Supplier Review Queue</h1>
         <p class="sub">12 applications pending review &nbsp;&middot;&nbsp; 4 awaiting documents</p>
     </div>
-    <a class="btn-ovl-ghost" href="#"><i class="fas fa-file-export me-2"></i>Export list</a>
+    <div class="d-flex align-items-center gap-3">
+        @if (ViewBag.LiveData == true)
+        {
+            <span class="pill pill-ok"><i class="fas fa-circle me-1" style="font-size:.5rem;"></i>LIVE API</span>
+        }
+        else
+        {
+            <span class="pill pill-warn">DEMO DATA</span>
+        }
+        <a class="btn-ovl-ghost" href="#"><i class="fas fa-file-export me-2"></i>Export list</a>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
@@ -94,7 +104,16 @@
                         <p class="text-muted" style="font-size:.76rem;">All @sel.DocumentsRequired documents verified.</p>
                     }
 
-                    <div class="d-flex gap-2 mt-4">
+                    @if (sel.Status == "Awaiting docs")
+                    {
+                        <form asp-action="Review" method="post" class="mt-4">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="supplierId" value="@sel.SupplierId" />
+                            <button type="submit" class="btn-ovl w-100">Open for review</button>
+                        </form>
+                    }
+
+                    <div class="d-flex gap-2 mt-3">
                         <form asp-action="RequestDocuments" method="post" class="flex-grow-1">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="supplierId" value="@sel.SupplierId" />
@@ -112,9 +131,20 @@
                     @if (sel.DocumentsVerified < sel.DocumentsRequired)
                     {
                         <p class="text-muted mt-2 mb-0" style="font-size:.7rem;font-style:italic;">
-                            Approval is blocked until all @sel.DocumentsRequired compliance documents are verified.
+                            Approval is refused by the API until all @sel.DocumentsRequired compliance documents are verified.
                         </p>
                     }
+
+                    <form asp-action="Reject" method="post" class="mt-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="supplierId" value="@sel.SupplierId" />
+                        <div class="d-flex gap-2">
+                            <input name="reason" class="form-control"
+                                   placeholder="Reason for rejection (shown to the applicant)"
+                                   style="font-size:.76rem;" />
+                            <button type="submit" class="btn-ovl-red" style="white-space:nowrap;">Reject</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         }

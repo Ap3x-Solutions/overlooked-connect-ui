@@ -1,4 +1,4 @@
-﻿@{
+@{
     string CurrentAction() => ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 }
 <!DOCTYPE html>
@@ -26,6 +26,8 @@
                 </div>
                 <div class="topbar-right">
                     <a href="#">Investor Relations</a>
+                    @* OVC-267: staff sign in here and are carried into the internal platform *@
+                    <a asp-controller="StaffAccess" asp-action="Login"><i class="fas fa-arrow-right-to-bracket me-1"></i>Staff Login</a>
                     <a asp-action="Careers">Careers</a>
                     <a asp-action="Suppliers">Supplier Portal</a>
                 </div>
