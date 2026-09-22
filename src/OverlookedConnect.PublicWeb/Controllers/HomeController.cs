@@ -70,33 +70,110 @@ namespace OverlookedConnect.PublicWeb.Controllers
         /* GET: Home/Contact */
         public IActionResult Contact() => View();
 
-        /* GET: Home/CareersApply */
-        [HttpGet]
-        public IActionResult CareersApply(string position) /* [Smith & Addie, [s.a.]] */
+       /* GET: Home/CareersApply */
+[HttpGet]
+public async Task<IActionResult> CareersApply(
+    int vacancyId,
+    string? position)
+{
+    if (vacancyId <= 0)
+    {
+        TempData["SuccessMessage"] =
+            "Please select one of the currently available vacancies.";
+
+        return RedirectToAction(nameof(Careers));
+    }
+
+    try
+    {
+        var vacancy = await _api.GetVacancyAsync(vacancyId);
+
+        if (vacancy is null)
         {
-            var model = new JobApplicationModel
-            {
-                Position = position ?? "Not Specified"
-            };
+            TempData["SuccessMessage"] =
+                "The selected vacancy could not be found.";
+
+            return RedirectToAction(nameof(Careers));
+        }
+
+        var model = new JobApplicationModel
+        {
+            VacancyId = vacancy.VacancyId,
+            Position = vacancy.Title
+        };
+
+        return View(model);
+    }
+    catch (HttpRequestException)
+    {
+        var model = new JobApplicationModel
+        {
+            VacancyId = vacancyId,
+            Position = position ?? "Selected vacancy"
+        };
+
+        return View(model);
+    }
+}
+
+/* POST: Home/CareersApply */
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> CareersApply(
+    JobApplicationModel model,CancellationToken cancellationToken)
+{
+    if (!model.PopiaConsent)
+        {
+            ModelState.AddModelError(
+                nameof(model.PopiaConsent),
+                "You must accept the POPIA consent to proceed.");
+        }
+    
+    if (!ModelState.IsValid)
+    {
+        return View(model);
+    }
+
+    try
+    {
+        var (ok, result, message) =
+            await _api.SubmitJobApplicationAsync(
+                model.VacancyId,
+                model.FullName,
+                model.Email,
+                model.Phone,
+                model.IdNumber,
+                model.Qualification,
+                model.YearsExperience,
+                model.PopiaConsent,
+                model.ResumeFile);
+
+        if (!ok)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                message);
+
             return View(model);
         }
 
-        /* POST: Home/CareersApply [Nowak, Larkin & Anderson, [s.a.]] */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult CareersApply(JobApplicationModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+        TempData["SuccessMessage"] =
+            $"Your application for {result!.VacancyTitle} " +
+            $"has been successfully submitted. " +
+            $"Application reference: {result.ApplicationId}.";
 
-            /*  For demonstartion/simulation purposes, it will just show success message in the prototype.
-                Connects to POST /api/applications under a later ticket. */
+        return RedirectToAction(nameof(Careers));
+    }
+    catch (HttpRequestException)
+    {
+        ModelState.AddModelError(
+            string.Empty,
+            "We could not reach the recruitment service. " +
+            "Please try again shortly.");
 
-            TempData["SuccessMessage"] = "Your job application has been successfully submitted! Our HR team will review your application and contact you if your skills match our requirements.";
-            return RedirectToAction("Careers");
-        }
+        return View(model);
+    }
+}
 
         /* POST: Home/SubmitSupplier — OVC-247 / OVC-267 [Hasan & Anderson, [s.a.]] */
         [HttpPost]

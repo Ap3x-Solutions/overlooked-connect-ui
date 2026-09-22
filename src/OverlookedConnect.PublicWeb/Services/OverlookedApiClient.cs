@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 
 /*
  Typed HTTP client for the shared Overlooked Connect REST API.
@@ -41,7 +42,14 @@ namespace OverlookedConnect.PublicWeb.Services
 
     public record ApiVacancy(int VacancyId, string Title, string Department, string Site,
         string EmploymentType, string Purpose, List<string> Requirements, DateTime ClosingDate);
-
+public record ApiJobApplicationResponse(
+    int ApplicationId,
+    int VacancyId,
+    string VacancyTitle,
+    string ApplicantName,
+    string ApplicantEmail,
+    string Status,
+    DateTime SubmittedAt);
     /* ---------- client ---------- */
 
     public class OverlookedApiClient
@@ -98,5 +106,102 @@ namespace OverlookedConnect.PublicWeb.Services
             var res = await _http.GetAsync($"api/vacancies/{id}");
             return res.IsSuccessStatusCode ? await res.Content.ReadFromJsonAsync<ApiVacancy>(Json) : null;
         }
+        public async Task<(bool ok, ApiJobApplicationResponse? result, string message)>
+    SubmitJobApplicationAsync(
+        int vacancyId,
+        string applicantName,
+        string applicantEmail,
+        string phoneNumber,
+        string idNumber,
+        string qualification,
+        string yearsExperience,
+        bool popiaConsent,
+        IFormFile resumeFile)
+{
+    using var content = new MultipartFormDataContent();
+
+    content.Add(
+        new StringContent(vacancyId.ToString()),
+        "VacancyId");
+
+    content.Add(
+        new StringContent(applicantName),
+        "ApplicantName");
+
+    content.Add(
+        new StringContent(applicantEmail),
+        "ApplicantEmail");
+
+    content.Add(
+        new StringContent(phoneNumber),
+        "PhoneNumber");
+
+    content.Add(
+        new StringContent(idNumber),
+        "IdNumber");
+
+    content.Add(
+        new StringContent(qualification),
+        "Qualification");
+
+    content.Add(
+        new StringContent(yearsExperience),
+        "YearsExperience");
+
+    content.Add(
+        new StringContent(popiaConsent.ToString().ToLowerInvariant()),
+        "PopiaConsent");
+
+    await using var stream = resumeFile.OpenReadStream();
+
+    using var fileContent = new StreamContent(stream);
+
+    fileContent.Headers.ContentType =
+        new MediaTypeHeaderValue(
+            string.IsNullOrWhiteSpace(resumeFile.ContentType)
+                ? "application/pdf"
+                : resumeFile.ContentType);
+
+    content.Add(
+        fileContent,
+        "ResumeFile",
+        resumeFile.FileName);
+
+    var response = await _http.PostAsync(
+        "api/job-applications",
+        content);
+
+    if (response.IsSuccessStatusCode)
+    {
+        var result =
+            await response.Content
+                .ReadFromJsonAsync<ApiJobApplicationResponse>(Json);
+
+        return (
+            true,
+            result,
+            "Your job application has been successfully submitted.");
+    }
+
+    try
+    {
+        var error =
+            await response.Content
+                .ReadFromJsonAsync<ApiMessage>(Json);
+
+        return (
+            false,
+            null,
+            error?.Message ??
+            $"Your application could not be submitted ({(int)response.StatusCode}).");
+    }
+    catch
+    {
+        return (
+            false,
+            null,
+            $"Your application could not be submitted ({(int)response.StatusCode}).");
+    }
+}
     }
 }
