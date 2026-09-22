@@ -1,210 +1,366 @@
+@using System.Text.Json
+@using OverlookedConnect.PublicWeb.Services
+
 @{
     ViewData["Title"] = "Careers";
-}
 
+    var vacancies =
+        ViewBag.Vacancies as List<ApiVacancy>
+        ?? new List<ApiVacancy>();
 
-@{
-    /* OVC-250 / OVC-267: vacancies come from GET /api/vacancies when the API is reachable.
-       The static listings below remain as the fallback so the page never breaks for a visitor. */
-    var liveVacancies = ViewBag.Vacancies as List<OverlookedConnect.PublicWeb.Services.ApiVacancy>;
-    var isLive = ViewBag.LiveVacancies == true && liveVacancies is { Count: > 0 };
-}
-
-@if (isLive)
-{
-    <section class="section">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <h2 class="h3 mb-0">Current vacancies</h2>
-                <span class="badge bg-success">@liveVacancies!.Count open position(s)</span>
-            </div>
-
-            <div class="row g-4">
-                @foreach (var v in liveVacancies!)
-                {
-                    <div class="col-md-6">
-                        <div class="card h-100 p-4">
-                            <div class="d-flex justify-content-between align-items-start gap-2">
-                                <h3 class="h5 mb-1">@v.Title</h3>
-                                <span class="badge bg-light text-dark">@v.EmploymentType</span>
-                            </div>
-                            <p class="text-muted small mb-3">@v.Department &middot; @v.Site</p>
-                            <p class="small">@v.Purpose</p>
-
-                            <ul class="small ps-3 mb-3">
-                                @foreach (var r in v.Requirements)
-                                {
-                                    <li>@r</li>
-                                }
-                            </ul>
-
-                            <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <span class="text-muted small">Closes @v.ClosingDate.ToString("dd MMM yyyy")</span>
-                                <a class="btn btn-primary btn-sm"
-                                   asp-action="CareersApply" asp-route-position="@v.Title">Apply</a>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    </section>
+    var firstVacancy = vacancies.FirstOrDefault();
 }
 
 <div class="page-hero">
     <div class="container">
         <span class="eyebrow">CAREERS AT OVERLOOKED</span>
         <h1>Build your career in mining</h1>
-        <div class="breadcrumb-trail"><a asp-action="Index">Home</a> &rsaquo; Careers</div>
+
+        <div class="breadcrumb-trail">
+            <a asp-action="Index">Home</a> &rsaquo; Careers
+        </div>
     </div>
 </div>
 
 <div class="container py-5">
-    <h4 class="mb-1">Open positions</h4>
-    <p class="text-muted mb-4">4 roles currently advertised across our Mpumalanga operations.</p>
 
-    <ul class="nav pill-tabs" id="deptFilter">
-        <li class="nav-item"><button class="nav-link active" type="button" data-filter="all">All departments</button></li>
-        <li class="nav-item"><button class="nav-link" type="button" data-filter="Mining Operations">Mining Operations</button></li>
-        <li class="nav-item"><button class="nav-link" type="button" data-filter="Engineering">Engineering</button></li>
-        <li class="nav-item"><button class="nav-link" type="button" data-filter="Health & Safety">Safety</button></li>
-        <li class="nav-item"><button class="nav-link" type="button" data-filter="Corporate">Corporate</button></li>
-    </ul>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1">Open positions</h4>
 
-    <div class="row g-4">
-        <div class="col-lg-7" id="jobList">
-            <div class="job-row selected"
-                 data-department="Mining Operations"
-                 data-title="Shift Supervisor"
-                 data-meta="Mining Operations &middot; Forzando South"
-                 data-tag="Permanent"
-                 data-closes="Closes 22 Aug 2026"
-                 data-purpose="Supervise a production shift, enforce safety standards and meet daily ROM targets across the section."
-                 data-req="Blasting Certificate (Fiery Mine)|5 years underground supervisory experience|Valid Red Ticket medical certificate|Grade 12 with Mathematics">
-                <div>
-                    <h5 class="mb-1">Shift Supervisor</h5>
-                    <p class="text-muted small mb-0">Mining Operations &middot; Forzando South</p>
-                </div>
-                <div class="text-end">
-                    <span class="pill pill-navy d-block mb-1">Permanent</span>
-                    <small class="text-muted">Closes 22 Aug 2026</small>
-                </div>
-            </div>
-
-            <div class="job-row"
-                 data-department="Health & Safety"
-                 data-title="Safety Officer"
-                 data-meta="Health &amp; Safety &middot; Dorstfontein West"
-                 data-tag="Permanent"
-                 data-closes="Closes 29 Aug 2026"
-                 data-purpose="Monitor compliance with the Mine Health and Safety Act, run toolbox talks and lead incident investigations."
-                 data-req="SAMTRAC or equivalent|3 years safety officer experience|Valid Red Ticket medical certificate|Grade 12">
-                <div>
-                    <h5 class="mb-1">Safety Officer</h5>
-                    <p class="text-muted small mb-0">Health &amp; Safety &middot; Dorstfontein West</p>
-                </div>
-                <div class="text-end">
-                    <span class="pill pill-navy d-block mb-1">Permanent</span>
-                    <small class="text-muted">Closes 29 Aug 2026</small>
-                </div>
-            </div>
-
-            <div class="job-row"
-                 data-department="Engineering"
-                 data-title="Diesel Mechanic"
-                 data-meta="Engineering &middot; Overlooked Colliery"
-                 data-tag="Permanent"
-                 data-closes="Closes 15 Aug 2026"
-                 data-purpose="Maintain and repair diesel-powered mobile fleet to maximise equipment availability across the opencast section."
-                 data-req="Trade Tested Diesel Mechanic|4 years heavy equipment experience|Valid driver's licence|Willingness to work shifts">
-                <div>
-                    <h5 class="mb-1">Diesel Mechanic</h5>
-                    <p class="text-muted small mb-0">Engineering &middot; Overlooked Colliery</p>
-                </div>
-                <div class="text-end">
-                    <span class="pill pill-navy d-block mb-1">Permanent</span>
-                    <small class="text-muted">Closes 15 Aug 2026</small>
-                </div>
-            </div>
-
-            <div class="job-row"
-                 data-department="Mining Operations"
-                 data-title="Graduate Geologist"
-                 data-meta="Mining Operations &middot; Emalahleni"
-                 data-tag="Graduate programme"
-                 data-closes="Closes 05 Sep 2026"
-                 data-purpose="Join our two-year graduate programme rotating through exploration, grade control and resource modelling."
-                 data-req="BSc Geology (Honours)|Grade 12 with Mathematics and Physical Science|South African citizen|Willing to relocate to Mpumalanga">
-                <div>
-                    <h5 class="mb-1">Graduate Geologist</h5>
-                    <p class="text-muted small mb-0">Mining Operations &middot; Emalahleni</p>
-                </div>
-                <div class="text-end">
-                    <span class="pill pill-navy d-block mb-1">Graduate programme</span>
-                    <small class="text-muted">Closes 05 Sep 2026</small>
-                </div>
-            </div>
+            @if (vacancies.Count > 0)
+            {
+                <p class="text-muted mb-0">
+                    @vacancies.Count open position@(vacancies.Count == 1 ? "" : "s")
+                    currently available.
+                </p>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    There are currently no vacancies available.
+                </p>
+            }
         </div>
 
-        <div class="col-lg-5">
-            <div class="job-detail-panel" id="jobDetail">
-                <h4 id="detailTitle" class="mb-1">Shift Supervisor</h4>
-                <p id="detailMeta" class="text-muted mb-3">Mining Operations &middot; Forzando South</p>
-                <hr />
-                <h6 class="mt-3 mb-2">Purpose of the role</h6>
-                <p id="detailPurpose" class="text-muted small"></p>
-                <h6 class="mt-3 mb-2">Minimum requirements</h6>
-                <ul class="text-muted small" id="detailReq" style="padding-left:1.1rem;"></ul>
-                <a asp-action="CareersApply" id="applyLink" asp-route-position="Shift Supervisor" class="btn btn-navy w-100 mt-3">Apply for this role</a>
-            </div>
-        </div>
+        @if (vacancies.Count > 0)
+        {
+            <span class="badge bg-success">
+                @vacancies.Count open position@(vacancies.Count == 1 ? "" : "s")
+            </span>
+        }
     </div>
+
+    @if (vacancies.Count == 0)
+    {
+        <div class="card p-5 text-center">
+            <h5 class="mb-2">No open positions</h5>
+
+            <p class="text-muted mb-0">
+                There are no vacancies available at the moment.
+                Please check again later.
+            </p>
+        </div>
+    }
+    else
+    {
+        var departments = vacancies
+            .Where(v => !string.IsNullOrWhiteSpace(v.Department))
+            .Select(v => v.Department)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(d => d)
+            .ToList();
+
+        <ul class="nav pill-tabs mb-4" id="deptFilter">
+            <li class="nav-item">
+                <button class="nav-link active"
+                        type="button"
+                        data-filter="all">
+                    All departments
+                </button>
+            </li>
+
+            @foreach (var department in departments)
+            {
+                <li class="nav-item">
+                    <button class="nav-link"
+                            type="button"
+                            data-filter="@department">
+                        @department
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <div class="row g-4">
+
+            <div class="col-lg-7" id="jobList">
+
+                @for (var i = 0; i < vacancies.Count; i++)
+                {
+                    var vacancy = vacancies[i];
+
+                    var requirementsJson =
+                        JsonSerializer.Serialize(
+                            vacancy.Requirements ?? new List<string>());
+
+                    <div class="job-row @(i == 0 ? "selected" : "")"
+                         data-vacancy-id="@vacancy.VacancyId"
+                         data-department="@vacancy.Department"
+                         data-title="@vacancy.Title"
+                         data-meta="@($"{vacancy.Department} · {vacancy.Site}")"
+                         data-tag="@vacancy.EmploymentType"
+                         data-closes="@vacancy.ClosingDate.ToString("dd MMM yyyy")"
+                         data-purpose="@vacancy.Purpose"
+                         data-requirements="@requirementsJson">
+
+                        <div>
+                            <h5 class="mb-1">
+                                @vacancy.Title
+                            </h5>
+
+                            <p class="text-muted small mb-0">
+                                @vacancy.Department &middot; @vacancy.Site
+                            </p>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="pill pill-navy d-block mb-1">
+                                @vacancy.EmploymentType
+                            </span>
+
+                            <small class="text-muted">
+                                Closes @vacancy.ClosingDate.ToString("dd MMM yyyy")
+                            </small>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+            <div class="col-lg-5">
+
+                <div class="job-detail-panel" id="jobDetail">
+
+                    @if (firstVacancy is not null)
+                    {
+                        <h4 id="detailTitle" class="mb-1">
+                            @firstVacancy.Title
+                        </h4>
+
+                        <p id="detailMeta"
+                           class="text-muted mb-1">
+                            @firstVacancy.Department &middot; @firstVacancy.Site
+                        </p>
+
+                        <div class="mb-3">
+                            <span id="detailTag"
+                                  class="pill pill-navy">
+                                @firstVacancy.EmploymentType
+                            </span>
+
+                            <small id="detailClosing"
+                                   class="text-muted ms-2">
+                                Closes @firstVacancy.ClosingDate.ToString("dd MMM yyyy")
+                            </small>
+                        </div>
+
+                        <hr />
+
+                        <h6 class="mt-3 mb-2">
+                            Purpose of the role
+                        </h6>
+
+                        <p id="detailPurpose"
+                           class="text-muted small">
+                            @firstVacancy.Purpose
+                        </p>
+
+                        <h6 class="mt-3 mb-2">
+                            Minimum requirements
+                        </h6>
+
+                        <ul class="text-muted small"
+                            id="detailReq"
+                            style="padding-left:1.1rem;">
+
+                            @foreach (var requirement in firstVacancy.Requirements)
+                            {
+                                <li>@requirement</li>
+                            }
+
+                        </ul>
+
+                        <a asp-action="CareersApply"
+                           asp-route-vacancyId="@firstVacancy.VacancyId"
+                           asp-route-position="@firstVacancy.Title"
+                           id="applyLink"
+                           class="btn btn-navy w-100 mt-3">
+                            Apply for this role
+                        </a>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
 </div>
 
-@section Scripts {
+@section Scripts
+{
     <script>
         (function () {
-            const rows = document.querySelectorAll('.job-row');
-            const detailTitle = document.getElementById('detailTitle');
-            const detailMeta = document.getElementById('detailMeta');
-            const detailPurpose = document.getElementById('detailPurpose');
-            const detailReq = document.getElementById('detailReq');
-            const applyLink = document.getElementById('applyLink');
 
-            function selectRow(row) {
-                rows.forEach(r => r.classList.remove('selected'));
-                row.classList.add('selected');
-                detailTitle.textContent = row.dataset.title;
-                detailMeta.innerHTML = row.dataset.meta;
-                detailPurpose.textContent = row.dataset.purpose;
-                detailReq.innerHTML = row.dataset.req.split('|').map(r => `<li>${r}</li>`).join('');
-                applyLink.setAttribute('href', applyLink.getAttribute('href').split('?')[0] + '?position=' + encodeURIComponent(row.dataset.title));
+            const rows =
+                document.querySelectorAll(".job-row");
+
+            if (!rows.length) {
+                return;
             }
 
-            rows.forEach(row => row.addEventListener('click', () => selectRow(row)));
-            if (rows.length) selectRow(rows[0]);
+            const detailTitle =
+                document.getElementById("detailTitle");
 
-            document.querySelectorAll('#deptFilter .nav-link').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    document.querySelectorAll('#deptFilter .nav-link').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    const filter = this.dataset.filter;
-                    rows.forEach(row => {
-                        row.style.display = (filter === 'all' || row.dataset.department === filter) ? 'flex' : 'none';
-                    });
+            const detailMeta =
+                document.getElementById("detailMeta");
+
+            const detailTag =
+                document.getElementById("detailTag");
+
+            const detailClosing =
+                document.getElementById("detailClosing");
+
+            const detailPurpose =
+                document.getElementById("detailPurpose");
+
+            const detailReq =
+                document.getElementById("detailReq");
+
+            const applyLink =
+                document.getElementById("applyLink");
+
+            function selectRow(row) {
+
+                rows.forEach(r =>
+                    r.classList.remove("selected"));
+
+                row.classList.add("selected");
+
+                const vacancyId =
+                    row.dataset.vacancyId;
+
+                const title =
+                    row.dataset.title;
+
+                detailTitle.textContent =
+                    title;
+
+                detailMeta.textContent =
+                    row.dataset.meta;
+
+                detailTag.textContent =
+                    row.dataset.tag;
+
+                detailClosing.textContent =
+                    "Closes " + row.dataset.closes;
+
+                detailPurpose.textContent =
+                    row.dataset.purpose;
+
+                let requirements = [];
+
+                try {
+                    requirements =
+                        JSON.parse(
+                            row.dataset.requirements || "[]");
+                }
+                catch {
+                    requirements = [];
+                }
+
+                detailReq.innerHTML = "";
+
+                requirements.forEach(requirement => {
+
+                    const li =
+                        document.createElement("li");
+
+                    li.textContent =
+                        requirement;
+
+                    detailReq.appendChild(li);
                 });
+
+                const url =
+                    new URL(
+                        applyLink.href,
+                        window.location.origin);
+
+                url.searchParams.set(
+                    "vacancyId",
+                    vacancyId);
+
+                url.searchParams.set(
+                    "position",
+                    title);
+
+                applyLink.href =
+                    url.pathname + url.search;
+            }
+
+            rows.forEach(row => {
+
+                row.addEventListener(
+                    "click",
+                    function () {
+                        selectRow(row);
+                    });
             });
+
+            const filterButtons =
+                document.querySelectorAll(
+                    "#deptFilter .nav-link");
+
+            filterButtons.forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        filterButtons.forEach(btn =>
+                            btn.classList.remove("active"));
+
+                        this.classList.add("active");
+
+                        const filter =
+                            this.dataset.filter;
+
+                        rows.forEach(row => {
+
+                            row.style.display =
+                                filter === "all" ||
+                                row.dataset.department === filter
+                                    ? "flex"
+                                    : "none";
+                        });
+
+                        const firstVisible =
+                            Array.from(rows)
+                                .find(row =>
+                                    row.style.display !== "none");
+
+                        if (firstVisible) {
+                            selectRow(firstVisible);
+                        }
+                    });
+            });
+
+            selectRow(rows[0]);
+
         })();
     </script>
 }
-
-@*
-    Reference List:
-        - W3Schools. [s.a.]. HTML Tutorial. [online]. Available at: <https://www.w3schools.com/html/> [Accessed 14 August 2026].
-        - W3Schools. [s.a.]. CSS Tutorial. [online]. Available at: <https://www.w3schools.com/css/> [Accessed 14 August 2026].
-        - W3Schools. [s.a.]. JavaScript Tutorial. [online]. Available at: <https://www.w3schools.com/js/> [Accessed 14 August 2026].
-        - W3Schools. [s.a.]. Bootstrap 4 Tutorial. [online]. Available at: <https://www.w3schools.com/bootstrap4/default.asp> [Accessed 14 August 2026].
-        - W3Schools. [s.a.]. Bootstrap 4 Forms. [online]. Available at: <https://www.w3schools.com/bootstrap4/bootstrap_forms.asp> [Accessed 14 August 2026].
-        - W3Schools. [s.a.]. Bootstrap 4 Navs. [online]. Available at: <https://www.w3schools.com/bootstrap4/bootstrap_navs.asp> [Accessed 14 August 2026].
-
-*@

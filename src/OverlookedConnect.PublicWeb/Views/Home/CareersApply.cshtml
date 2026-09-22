@@ -1,100 +1,522 @@
 ﻿@model OverlookedConnect.PublicWeb.Models.JobApplicationModel
+
 @{
     ViewData["Title"] = "Application Form";
 }
 
 <div class="page-hero">
     <div class="container">
-        <span class="eyebrow">CAREERS AT OVERLOOKED</span>
+
+        <span class="eyebrow">
+            CAREERS AT OVERLOOKED
+        </span>
+
         <h1>Application form</h1>
-        <div class="breadcrumb-trail">@Model.Position &middot; Overlooked Group</div>
+
+        <div class="breadcrumb-trail">
+            @Model.Position &middot; Overlooked Group
+        </div>
+
     </div>
 </div>
 
-<div class="container py-5" style="max-width: 900px;">
+<div class="container py-5"
+     style="max-width: 900px;">
+
     <div class="card p-4 p-md-5">
-        <form asp-action="CareersApply" method="post" enctype="multipart/form-data" novalidate>
+
+        <form asp-action="CareersApply"
+              asp-controller="Home"
+              method="post"
+              enctype="multipart/form-data"
+              id="careerApplicationForm">
+
             @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="Position" />
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="FullName" class="form-label">Full name *</label>
-                    <input asp-for="FullName" class="form-control" placeholder="As it appears on your ID" />
-                    <span asp-validation-for="FullName" class="text-danger small"></span>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="IdNumber" class="form-label">ID / passport number *</label>
-                    <input asp-for="IdNumber" class="form-control" placeholder="e.g. 9204125012083" />
-                    <span asp-validation-for="IdNumber" class="text-danger small"></span>
-                </div>
-            </div>
+            <input asp-for="VacancyId"
+                   type="hidden" />
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Email" class="form-label">Email address *</label>
-                    <input asp-for="Email" class="form-control" placeholder="you@example.co.za" />
-                    <span asp-validation-for="Email" class="text-danger small"></span>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Phone" class="form-label">Contact number *</label>
-                    <input asp-for="Phone" class="form-control" placeholder="082 000 0000" />
-                    <span asp-validation-for="Phone" class="text-danger small"></span>
-                </div>
-            </div>
+            <input asp-for="Position"
+                   type="hidden" />
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Qualification" class="form-label">Highest qualification *</label>
-                    <select asp-for="Qualification" class="form-select">
-                        <option value="">Select...</option>
-                        <option>Grade 12 / Matric</option>
-                        <option>Trade Certificate</option>
-                        <option>Diploma</option>
-                        <option>Bachelor's Degree</option>
-                        <option>Honours Degree</option>
-                        <option>Postgraduate</option>
-                    </select>
-                    <span asp-validation-for="Qualification" class="text-danger small"></span>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="YearsExperience" class="form-label">Years of relevant experience *</label>
-                    <select asp-for="YearsExperience" class="form-select">
-                        <option value="">Select...</option>
-                        <option>0&ndash;1 years</option>
-                        <option>2&ndash;4 years</option>
-                        <option>5&ndash;7 years</option>
-                        <option>8+ years</option>
-                    </select>
-                    <span asp-validation-for="YearsExperience" class="text-danger small"></span>
-                </div>
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
             </div>
 
             <div class="mb-4">
-                <label class="form-label">Upload your CV *</label>
-                <div class="dropzone">
-                    <i class="fas fa-cloud-arrow-up mb-2 d-block" style="font-size:1.3rem;"></i>
-                    Drag and drop, or browse &mdash; PDF only, maximum 5 MB
-                    <input asp-for="ResumeFile" type="file" accept=".pdf" />
-                </div>
-                <span asp-validation-for="ResumeFile" class="text-danger d-block small"></span>
+
+                <label class="form-label">
+                    Position
+                </label>
+
+                <input value="@Model.Position"
+                       class="form-control"
+                       readonly />
+
             </div>
 
-            <div class="form-check mb-4">
-                <input asp-for="PopiaConsent" class="form-check-input" id="PopiaConsent" />
-                <label asp-for="PopiaConsent" class="form-check-label small" for="PopiaConsent">
-                    I consent to OVL processing my personal information for recruitment purposes under POPIA.
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="FullName"
+                           class="form-label">
+                        Full name *
+                    </label>
+
+                    <input asp-for="FullName"
+                           class="form-control"
+                           placeholder="As it appears on your ID" />
+
+                    <span asp-validation-for="FullName"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="IdNumber"
+                           class="form-label">
+                        ID / passport number *
+                    </label>
+
+                    <input asp-for="IdNumber"
+                           class="form-control"
+                           placeholder="e.g. 9204125012083" />
+
+                    <span asp-validation-for="IdNumber"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Email"
+                           class="form-label">
+                        Email address *
+                    </label>
+
+                    <input asp-for="Email"
+                           class="form-control"
+                           placeholder="you@example.co.za" />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Phone"
+                           class="form-label">
+                        Contact number *
+                    </label>
+
+                    <input asp-for="Phone"
+                           class="form-control"
+                           placeholder="082 000 0000" />
+
+                    <span asp-validation-for="Phone"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Qualification"
+                           class="form-label">
+                        Highest qualification *
+                    </label>
+
+                    <select asp-for="Qualification"
+                            class="form-select">
+
+                        <option value="">
+                            Select...
+                        </option>
+
+                        <option value="Grade 12 / Matric">
+                            Grade 12 / Matric
+                        </option>
+
+                        <option value="Trade Certificate">
+                            Trade Certificate
+                        </option>
+
+                        <option value="Diploma">
+                            Diploma
+                        </option>
+
+                        <option value="Bachelor's Degree">
+                            Bachelor's Degree
+                        </option>
+
+                        <option value="Honours Degree">
+                            Honours Degree
+                        </option>
+
+                        <option value="Postgraduate">
+                            Postgraduate
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="Qualification"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="YearsExperience"
+                           class="form-label">
+                        Years of relevant experience *
+                    </label>
+
+                    <select asp-for="YearsExperience"
+                            class="form-select">
+
+                        <option value="">
+                            Select...
+                        </option>
+
+                        <option value="0–1 years">
+                            0–1 years
+                        </option>
+
+                        <option value="2–4 years">
+                            2–4 years
+                        </option>
+
+                        <option value="5–7 years">
+                            5–7 years
+                        </option>
+
+                        <option value="8+ years">
+                            8+ years
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="YearsExperience"
+                          class="text-danger small">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- CV Upload -->
+            <div class="mb-4">
+
+                <label asp-for="ResumeFile"
+                       class="form-label">
+                    Upload your CV *
                 </label>
-                <span asp-validation-for="PopiaConsent" class="text-danger d-block small"></span>
+
+                <label for="ResumeFile"
+                       class="dropzone d-block text-center"
+                       id="resumeDropzone"
+                       style="cursor:pointer;">
+
+                    <i class="fas fa-cloud-arrow-up mb-2 d-block"
+                       style="font-size:1.3rem;">
+                    </i>
+
+                    <span id="resumeUploadText">
+                        Drag and drop, or browse — PDF only,
+                        maximum 5 MB
+                    </span>
+
+                </label>
+
+                <input asp-for="ResumeFile"
+                       id="ResumeFile"
+                       type="file"
+                       accept=".pdf,application/pdf"
+                       class="d-none" />
+
+                <div id="selectedFile"
+                     class="small mt-2"
+                     style="display:none;">
+
+                    <strong>Selected file:</strong>
+                    <span id="selectedFileName"></span>
+
+                </div>
+
+                <span asp-validation-for="ResumeFile"
+                      id="resumeValidation"
+                      class="text-danger d-block small mt-1">
+                </span>
+
+            </div>
+
+            <!-- POPIA -->
+            <div class="form-check mb-4">
+
+                <input asp-for="PopiaConsent"
+                       type="checkbox"
+                       class="form-check-input"
+                       id="PopiaConsent" />
+
+                <label for="PopiaConsent"
+                       class="form-check-label small">
+
+                    I consent to OVL processing my
+                    personal information for recruitment
+                    purposes under POPIA.
+
+                </label>
+
+                <span asp-validation-for="PopiaConsent"
+                      id="popiaValidation"
+                      class="text-danger d-block small">
+                </span>
+
             </div>
 
             <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-navy">Submit application</button>
+
+                <button type="submit"
+                        class="btn btn-navy"
+                        id="submitApplicationButton">
+                    Submit application
+                </button>
+
             </div>
+
         </form>
+
     </div>
+
 </div>
 
-@section Scripts {
+@section Scripts
+{
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const fileInput =
+                document.getElementById("ResumeFile");
+
+            const dropzone =
+                document.getElementById("resumeDropzone");
+
+            const uploadText =
+                document.getElementById("resumeUploadText");
+
+            const selectedFile =
+                document.getElementById("selectedFile");
+
+            const selectedFileName =
+                document.getElementById("selectedFileName");
+
+            const resumeValidation =
+                document.getElementById("resumeValidation");
+
+            const popiaCheckbox =
+                document.getElementById("PopiaConsent");
+
+            const popiaValidation =
+                document.getElementById("popiaValidation");
+
+            const form =
+                document.getElementById("careerApplicationForm");
+
+            const maxFileSize =
+                5 * 1024 * 1024;
+
+
+            /*
+             * Display the selected PDF.
+             */
+            function showSelectedFile(file) {
+
+                if (!file) {
+                    selectedFile.style.display = "none";
+                    selectedFileName.textContent = "";
+
+                    uploadText.textContent =
+                        "Drag and drop, or browse — PDF only, maximum 5 MB";
+
+                    return;
+                }
+
+                const isPdf =
+                    file.type === "application/pdf" ||
+                    file.name.toLowerCase().endsWith(".pdf");
+
+                if (!isPdf) {
+
+                    fileInput.value = "";
+
+                    selectedFile.style.display = "none";
+
+                    resumeValidation.textContent =
+                        "Please upload your CV in PDF format.";
+
+                    return;
+                }
+
+                if (file.size > maxFileSize) {
+
+                    fileInput.value = "";
+
+                    selectedFile.style.display = "none";
+
+                    resumeValidation.textContent =
+                        "The CV must not exceed 5 MB.";
+
+                    return;
+                }
+
+                selectedFileName.textContent = file.name;
+                selectedFile.style.display = "block";
+
+                uploadText.textContent =
+                    "CV selected successfully — click to choose another file";
+
+                resumeValidation.textContent = "";
+            }
+
+
+            /*
+             * Normal file picker.
+             */
+            fileInput.addEventListener("change", function () {
+
+                const file =
+                    fileInput.files.length > 0
+                        ? fileInput.files[0]
+                        : null;
+
+                showSelectedFile(file);
+
+                /*
+                 * Tell jQuery validation to validate the
+                 * actual file input again.
+                 */
+                if (window.jQuery) {
+                    $(fileInput).valid();
+                }
+            });
+
+
+            /*
+             * Drag-and-drop support.
+             */
+            dropzone.addEventListener(
+                "dragover",
+                function (event) {
+
+                    event.preventDefault();
+
+                    dropzone.style.opacity = "0.7";
+                });
+
+
+            dropzone.addEventListener(
+                "dragleave",
+                function () {
+
+                    dropzone.style.opacity = "1";
+                });
+
+
+            dropzone.addEventListener(
+                "drop",
+                function (event) {
+
+                    event.preventDefault();
+
+                    dropzone.style.opacity = "1";
+
+                    if (!event.dataTransfer.files.length) {
+                        return;
+                    }
+
+                    const file =
+                        event.dataTransfer.files[0];
+
+                    const dataTransfer =
+                        new DataTransfer();
+
+                    dataTransfer.items.add(file);
+
+                    fileInput.files =
+                        dataTransfer.files;
+
+                    showSelectedFile(file);
+
+                    if (window.jQuery) {
+                        $(fileInput).valid();
+                    }
+                });
+
+
+            /*
+             * Clear the POPIA validation message immediately
+             * after consent has been accepted.
+             */
+            popiaCheckbox.addEventListener(
+            "change",
+            function () {
+
+                if (popiaCheckbox.checked) {
+                    popiaValidation.textContent = "";
+                }
+            });
+
+
+            /*
+             * Final browser-side safety check before POST.
+             *
+             * The API still performs its own validation.
+             */
+            form.addEventListener(
+                "submit",
+                function (event) {
+
+                    let valid = true;
+
+                    if (!fileInput.files ||
+                        fileInput.files.length === 0) {
+
+                        resumeValidation.textContent =
+                            "Please upload your CV in PDF format.";
+
+                        valid = false;
+                    }
+
+                    if (!popiaCheckbox.checked) {
+
+                        popiaValidation.textContent =
+                            "You must accept the POPIA consent to proceed.";
+
+                        valid = false;
+                    }
+
+                    if (!valid) {
+                        event.preventDefault();
+                    }
+                });
+
+        });
+    </script>
 }
