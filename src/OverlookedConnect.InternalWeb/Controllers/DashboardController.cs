@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
 
 /*
  This controller serves the Executive-facing screens of the Internal Operations Platform:
@@ -19,16 +20,93 @@ namespace OverlookedConnect.Internal.Controllers
 {
     public class DashboardController : Controller
     {
-        /* GET: Dashboard/Index */
-        public IActionResult Index()
+        private readonly OverlookedApiClient _api;
+
+        public DashboardController(OverlookedApiClient api)
         {
+            _api = api;
+        }
+        /* GET: Dashboard/Index */
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        {
+            List<Incident> recent;
+            var live = true;
+
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                TempData["ErrorMessage"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var apiItems = await _api.GetIncidentsAsync(null, accessToken, cancellationToken);
+
+                recent = apiItems
+                    .Select(ai => new Incident
+                    {
+                        IncidentId = string.IsNullOrWhiteSpace(ai.Reference) ? $"INC-{ai.IncidentId}" : ai.Reference,
+                        Title = ai.IncidentType,
+                        Site = ai.Site,
+                        Severity = ai.Severity,
+                        InvestigationStatus = ai.Status,
+                        ReportedBy = string.IsNullOrWhiteSpace(ai.EmployeeName) && string.IsNullOrWhiteSpace(ai.EmployeeNumber)
+                            ? ""
+                            : $"{ai.EmployeeName} ({ai.EmployeeNumber})",
+                        DateReported = ai.DateReported.ToString("dd MMM yyyy, HH:mm"),
+                        Description = ai.Description,
+                        PhotoCount = 0,
+                        LifecycleStage = ai.Status switch
+                        {
+                            "Reported" => 0,
+                            "Acknowledged" => 1,
+                            "UnderInvestigation" => 2,
+                            "Escalated" => 2,
+                            "CorrectiveActionAssigned" => 3,
+                            "Verification" => 4,
+                            "Closed" => 5,
+                            _ => 0
+                        }
+                    })
+                    .Take(4)
+                    .ToList();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                TempData["ErrorMessage"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction("Login", "Account");
+            }
+            catch (HttpRequestException)
+            {
+                live = false;
+                recent = DemoData.Incidents.Take(4).ToList();
+
+                TempData["SuccessMessage"] ??= "The API is not reachable — showing Task 1 demonstration data.";
+            }
+            catch (Exception)
+            {
+                live = false;
+                recent = DemoData.Incidents.Take(4).ToList();
+
+                TempData["SuccessMessage"] ??= "Live incident information is currently unavailable — showing Task 1 demonstration data.";
+            }
+
             var model = new DashboardViewModel
             {
                 Approvals = DemoData.Approvals,
-                RecentIncidents = DemoData.Incidents.Take(4).ToList(), /* [Microsoft Learn, [s.a.]] */
+                RecentIncidents = recent,
                 Production = DemoData.ProductionByMonth,
                 Workforce = DemoData.WorkforceByUnit
             };
+
+            ViewBag.LiveData = live;
+
             return View(model);
         }
 

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
+
 
 /*
  This controller serves the Safety & Incident Reporting module (FR-04, US-05, US-06) for the
@@ -22,6 +24,12 @@ namespace OverlookedConnect.Internal.Controllers
 {
     public class SafetyController : Controller
     {
+        private readonly OverlookedApiClient _api;
+
+        public SafetyController(OverlookedApiClient api)
+        {
+            _api = api;
+        }
         /* The ordered lifecycle stages, used by the view to render the progress tracker. */
         public static readonly string[] Lifecycle =
         {
@@ -29,23 +37,88 @@ namespace OverlookedConnect.Internal.Controllers
         };
 
         /* GET: Safety/Index */
-        public IActionResult Index(string? id, string? filter)
+        public async Task<IActionResult> Index(string? id, string? filter, CancellationToken cancellationToken)
         {
-            var incidents = DemoData.Incidents.AsEnumerable();
+            List<Incident> list;
+            var live = true;
 
-            if (filter == "Open")
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+
+            if (string.IsNullOrWhiteSpace(accessToken))
             {
-                incidents = incidents.Where(i => i.InvestigationStatus != "Closed");
-            }
-            else if (filter == "Closed")
-            {
-                incidents = incidents.Where(i => i.InvestigationStatus == "Closed");
+                TempData["ErrorMessage"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction("Login", "Account");
             }
 
-            var list = incidents.ToList();
+            try
+            {
+                var apiItems = await _api.GetIncidentsAsync(null, accessToken, cancellationToken);
+
+                list = apiItems.Select(ai => new Incident
+                {
+                    IncidentId = string.IsNullOrWhiteSpace(ai.Reference) ? $"INC-{ai.IncidentId}" : ai.Reference,
+                    Title = ai.IncidentType,
+                    Site = ai.Site,
+                    Severity = ai.Severity,
+                    InvestigationStatus = ai.Status,
+                    ReportedBy = string.IsNullOrWhiteSpace(ai.EmployeeName) && string.IsNullOrWhiteSpace(ai.EmployeeNumber)
+                        ? ""
+                        : $"{ai.EmployeeName} ({ai.EmployeeNumber})",
+                    DateReported = ai.DateReported.ToString("dd MMM yyyy, HH:mm"),
+                    Description = ai.Description,
+                    PhotoCount = 0,
+                    LifecycleStage = ai.Status switch
+                    {
+                        "Reported" => 0,
+                        "Acknowledged" => 1,
+                        "UnderInvestigation" => 2,
+                        "Escalated" => 2,
+                        "CorrectiveActionAssigned" => 3,
+                        "Verification" => 4,
+                        "Closed" => 5,
+                        _ => 0
+                    }
+                }).ToList();
+
+                if (filter == "Open")
+                {
+                    list = list.Where(i => i.InvestigationStatus != "Closed").ToList();
+                }
+                else if (filter == "Closed")
+                {
+                    list = list.Where(i => i.InvestigationStatus == "Closed").ToList();
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                TempData["ErrorMessage"] =
+                    "Your session has expired. Please sign in again.";
+
+                return RedirectToAction("Login", "Account");
+            }
+            catch (HttpRequestException)
+            {
+                live = false;
+                list = DemoData.Incidents;
+
+                TempData["SuccessMessage"] ??=
+                    "The API is not reachable — showing Task 1 demonstration data.";
+            }
+            catch (Exception)
+            {
+                live = false;
+                list = DemoData.Incidents;
+
+                TempData["SuccessMessage"] ??=
+                    "Live incident information is currently unavailable — showing Task 1 demonstration data.";
+            }
+
             var selected = list.FirstOrDefault(i => i.IncidentId == id) ?? list.FirstOrDefault();
 
             ViewBag.Filter = filter ?? "All";
+            ViewBag.LiveData = live;
 
             return View(new SafetyViewModel { Incidents = list, Selected = selected });
         }
