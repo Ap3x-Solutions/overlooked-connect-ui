@@ -1,136 +1,502 @@
 @{
-    string CurrentAction() => ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string CurrentAction() =>
+        ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    var applicantToken =
+        Context.Session.GetString("ApplicantAccessToken");
+
+    var applicantName =
+        Context.Session.GetString("ApplicantName");
+
+    var applicantSignedIn =
+        !string.IsNullOrWhiteSpace(applicantToken);
 }
+
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Overlooked Group - 100% Black-Owned Mining Operation in Mpumalanga" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <meta name="description"
+          content="Overlooked Group - 100% Black-Owned Mining Operation in Mpumalanga" />
+
     <title>@ViewData["Title"] - Overlooked Group</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
 </head>
+
 <body>
+
     <header>
+
+        <!-- TOP BAR -->
         <div class="topbar d-none d-lg-block">
+
             <div class="container d-flex justify-content-between align-items-center">
+
                 <div class="topbar-left">
-                    <span><i class="fas fa-location-dot me-1"></i>Mpumalanga &middot; Gauteng</span>
-                    <span>JSE-listed supplier partner</span>
-                    <span>24/7 Safety Line 0800 20 20 20</span>
+
+                    <span>
+                        <i class="fas fa-location-dot me-1"></i>
+                        Mpumalanga &middot; Gauteng
+                    </span>
+
+                    <span>
+                        JSE-listed supplier partner
+                    </span>
+
+                    <span>
+                        24/7 Safety Line 0800 20 20 20
+                    </span>
+
                 </div>
+
                 <div class="topbar-right">
-                    <a href="#">Investor Relations</a>
-                    @* OVC-267: staff sign in here and are carried into the internal platform *@
-                    <a asp-controller="StaffAccess" asp-action="Login"><i class="fas fa-arrow-right-to-bracket me-1"></i>Staff Login</a>
-                    <a asp-action="Careers">Careers</a>
-                    <a asp-action="Suppliers">Supplier Portal</a>
+
+                    <a href="#">
+                        Investor Relations
+                    </a>
+
+                    @* OVC-267:
+                       Staff sign in here and are carried
+                       into the internal platform.
+                    *@
+
+                    <a asp-controller="StaffAccess"
+                       asp-action="Login">
+                        <i class="fas fa-arrow-right-to-bracket me-1"></i>
+                        Staff Login
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Careers">
+                        Careers
+                    </a>
+
+                    @*
+                        Applicant navigation changes depending
+                        on whether an applicant session exists.
+                    *@
+
+                    @if (applicantSignedIn)
+                    {
+                        <a asp-controller="ApplicantPortal"
+                           asp-action="Dashboard">
+                            <i class="fas fa-briefcase me-1"></i>
+                            My Applications
+                        </a>
+
+                        <form asp-controller="ApplicantPortal"
+                              asp-action="Logout"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="btn btn-link p-0 border-0 text-decoration-none"
+                                    style="color: inherit; font-size: inherit;">
+                                <i class="fas fa-arrow-right-from-bracket me-1"></i>
+                                Sign out
+                            </button>
+
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="ApplicantPortal"
+                           asp-action="Login">
+                            <i class="fas fa-user me-1"></i>
+                            Applicant Login
+                        </a>
+                    }
+
+                    <a asp-controller="Home"
+                       asp-action="Suppliers">
+                        Supplier Portal
+                    </a>
+
                 </div>
+
             </div>
+
         </div>
 
+
+        <!-- MAIN NAVIGATION -->
         <nav class="navbar navbar-expand-lg navbar-custom">
+
             <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    <span class="brand-mark">O</span>
-                    <span>OVERLOOKED</span>
+
+                <a class="navbar-brand"
+                   asp-controller="Home"
+                   asp-action="Index">
+
+                    <span class="brand-mark">
+                        O
+                    </span>
+
+                    <span>
+                        OVERLOOKED
+                    </span>
+
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+
+
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav"
+                        aria-controls="navbarNav"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+
                     <span class="navbar-toggler-icon"></span>
+
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
+
+
+                <div class="collapse navbar-collapse"
+                     id="navbarNav">
+
                     <ul class="navbar-nav ms-auto align-items-lg-center">
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Index" ? "active" : "")" asp-controller="Home" asp-action="Index">Home</a>
+
+                            <a class="nav-link @(CurrentAction() == "Index" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Index">
+                                Home
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Leadership" ? "active" : "")" asp-controller="Home" asp-action="Leadership">Our Business</a>
+
+                            <a class="nav-link @(CurrentAction() == "Leadership" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Leadership">
+                                Our Business
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Operations" ? "active" : "")" asp-controller="Home" asp-action="Operations">Operations</a>
+
+                            <a class="nav-link @(CurrentAction() == "Operations" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Operations">
+                                Operations
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Sustainability" ? "active" : "")" asp-controller="Home" asp-action="Sustainability">Sustainability</a>
+
+                            <a class="nav-link @(CurrentAction() == "Sustainability" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Sustainability">
+                                Sustainability
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Careers" || CurrentAction() == "CareersApply" ? "active" : "")" asp-controller="Home" asp-action="Careers">Careers</a>
+
+                            <a class="nav-link @(CurrentAction() == "Careers" || CurrentAction() == "CareersApply" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Careers">
+                                Careers
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Suppliers" ? "active" : "")" asp-controller="Home" asp-action="Suppliers">Suppliers</a>
+
+                            <a class="nav-link @(CurrentAction() == "Suppliers" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Suppliers">
+                                Suppliers
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item">
-                            <a class="nav-link @(CurrentAction() == "Contact" ? "active" : "")" asp-controller="Home" asp-action="Contact">Contact</a>
+
+                            <a class="nav-link @(CurrentAction() == "Contact" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Contact">
+                                Contact
+                            </a>
+
                         </li>
+
+
                         <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
-                            <a href="#" class="btn-invest d-inline-block">Investor Hub</a>
+
+                            <a href="#"
+                               class="btn-invest d-inline-block">
+                                Investor Hub
+                            </a>
+
                         </li>
+
                     </ul>
+
                 </div>
+
             </div>
+
         </nav>
+
     </header>
 
+
+    <!-- SUCCESS MESSAGE -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show text-center rounded-0 mb-0" role="alert">
-            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-success alert-dismissible fade show text-center rounded-0 mb-0"
+             role="alert">
+
+            <i class="fas fa-check-circle me-2"></i>
+
+            @TempData["SuccessMessage"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+
         </div>
     }
 
+
+    <!-- ERROR MESSAGE -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show text-center rounded-0 mb-0"
+             role="alert">
+
+            <i class="fas fa-circle-exclamation me-2"></i>
+
+            @TempData["ErrorMessage"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+
+        </div>
+    }
+
+
+    <!-- PAGE CONTENT -->
     <main role="main">
+
         @RenderBody()
+
     </main>
 
+
+    <!-- FOOTER -->
     <footer class="site-footer">
+
         <div class="container">
+
             <div class="row gy-4">
+
                 <div class="col-lg-4">
+
                     <div class="footer-brand">
-                        <span class="brand-mark">O</span>
-                        <span>OVERLOOKED</span>
+
+                        <span class="brand-mark">
+                            O
+                        </span>
+
+                        <span>
+                            OVERLOOKED
+                        </span>
+
                     </div>
-                    <p class="mb-1" style="color:rgba(255,255,255,0.65);">Overlooked Group (Pty) Ltd</p>
-                    <p class="mb-1" style="color:rgba(255,255,255,0.65);">Corporate Office, Pretoria, Gauteng</p>
-                    <p style="color:rgba(255,255,255,0.65);">Reg. 2016/447281/07</p>
+
+                    <p class="mb-1"
+                       style="color:rgba(255,255,255,0.65);">
+                        Overlooked Group (Pty) Ltd
+                    </p>
+
+                    <p class="mb-1"
+                       style="color:rgba(255,255,255,0.65);">
+                        Corporate Office, Pretoria, Gauteng
+                    </p>
+
+                    <p style="color:rgba(255,255,255,0.65);">
+                        Reg. 2016/447281/07
+                    </p>
+
                 </div>
+
+
                 <div class="col-6 col-lg-2 offset-lg-1">
-                    <h6>Company</h6>
-                    <a asp-action="Leadership">Our Business</a>
-                    <a asp-action="Leadership">Leadership</a>
-                    <a asp-action="Operations">Operations</a>
-                    <a href="#">Newsroom</a>
+
+                    <h6>
+                        Company
+                    </h6>
+
+                    <a asp-controller="Home"
+                       asp-action="Leadership">
+                        Our Business
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Leadership">
+                        Leadership
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Operations">
+                        Operations
+                    </a>
+
+                    <a href="#">
+                        Newsroom
+                    </a>
+
                 </div>
+
+
                 <div class="col-6 col-lg-2">
-                    <h6>Engage</h6>
-                    <a asp-action="Suppliers">Suppliers &amp; SMMEs</a>
-                    <a asp-action="Careers">Careers</a>
-                    <a href="#">Investor Hub</a>
-                    <a asp-action="Contact">Contact Us</a>
+
+                    <h6>
+                        Engage
+                    </h6>
+
+                    <a asp-controller="Home"
+                       asp-action="Suppliers">
+                        Suppliers &amp; SMMEs
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Careers">
+                        Careers
+                    </a>
+
+                    @if (applicantSignedIn)
+                    {
+                        <a asp-controller="ApplicantPortal"
+                           asp-action="Dashboard">
+                            My Applications
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="ApplicantPortal"
+                           asp-action="Login">
+                            Applicant Login
+                        </a>
+                    }
+
+                    <a href="#">
+                        Investor Hub
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Contact">
+                        Contact Us
+                    </a>
+
                 </div>
+
+
                 <div class="col-6 col-lg-2">
-                    <h6>Governance</h6>
-                    <a asp-action="Sustainability">Sustainability &amp; ESG</a>
-                    <a href="#">B-BBEE Certificate</a>
-                    <a href="#">POPIA Notice</a>
-                    <a href="#">Whistleblower Line</a>
+
+                    <h6>
+                        Governance
+                    </h6>
+
+                    <a asp-controller="Home"
+                       asp-action="Sustainability">
+                        Sustainability &amp; ESG
+                    </a>
+
+                    <a href="#">
+                        B-BBEE Certificate
+                    </a>
+
+                    <a href="#">
+                        POPIA Notice
+                    </a>
+
+                    <a href="#">
+                        Whistleblower Line
+                    </a>
+
                 </div>
+
             </div>
+
+
             <div class="footer-bottom">
-                <span>&copy; @DateTime.Now.Year Overlooked Group (Pty) Ltd. All rights reserved.</span>
-                <span>Prototype &mdash; Apex Solutions (Group 4) &middot; INSY7315</span>
+
+                <span>
+                    &copy; @DateTime.Now.Year Overlooked Group (Pty) Ltd.
+                    All rights reserved.
+                </span>
+
+                <span>
+                    Prototype &mdash; Apex Solutions (Group 4)
+                    &middot; INSY7315
+                </span>
+
             </div>
+
         </div>
+
     </footer>
 
+
+    <!-- SCRIPTS -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+
+    <script src="~/js/site.js"
+            asp-append-version="true">
+    </script>
+
+    @await RenderSectionAsync(
+        "Scripts",
+        required: false)
+
 </body>
+
 </html>

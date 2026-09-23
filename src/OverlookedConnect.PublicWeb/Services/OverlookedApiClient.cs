@@ -50,6 +50,36 @@ public record ApiJobApplicationResponse(
     string ApplicantEmail,
     string Status,
     DateTime SubmittedAt);
+
+    public record ApiApplicantRegisterResponse(
+    int UserId,
+    string FullName,
+    string Email,
+    string Role);
+
+public record ApiApplicantApplication(
+    int ApplicationId,
+    int VacancyId,
+    string VacancyTitle,
+    string Department,
+    string Location,
+    string ApplicantName,
+    string ApplicantEmail,
+    string PhoneNumber,
+    string IdNumber,
+    string Qualification,
+    string YearsExperience,
+    string Status,
+    DateTime SubmittedAt,
+    string Reference,
+    bool CanEdit,
+    bool CanWithdraw);
+
+public record ApiApplicantUpdateRequest(
+    string ApplicantName,
+    string PhoneNumber,
+    string Qualification,
+    string YearsExperience);
     /* ---------- client ---------- */
 
     public class OverlookedApiClient
@@ -72,6 +102,194 @@ public record ApiJobApplicationResponse(
                 ? await res.Content.ReadFromJsonAsync<ApiLoginResponse>(Json)
                 : null;
         }
+        public async Task<(bool ok, ApiApplicantRegisterResponse? result, string message)>
+    RegisterApplicantAsync(
+        string fullName,
+        string email,
+        string password,
+        string confirmPassword)
+{
+    var response = await _http.PostAsJsonAsync(
+        "api/applicant-auth/register",
+        new
+        {
+            fullName,
+            email,
+            password,
+            confirmPassword
+        });
+
+    if (response.IsSuccessStatusCode)
+    {
+        var result =
+            await response.Content
+                .ReadFromJsonAsync<ApiApplicantRegisterResponse>(Json);
+
+        return (
+            true,
+            result,
+            "Your applicant account has been created.");
+    }
+
+    try
+    {
+        var error =
+            await response.Content.ReadFromJsonAsync<ApiMessage>(Json);
+
+        return (
+            false,
+            null,
+            error?.Message ?? "Registration could not be completed.");
+    }
+    catch
+    {
+        return (
+            false,
+            null,
+            "Registration could not be completed.");
+    }
+}
+
+public async Task<ApiLoginResponse?> ApplicantLoginAsync(
+    string email,
+    string password)
+{
+    var response = await _http.PostAsJsonAsync(
+        "api/applicant-auth/login",
+        new
+        {
+            email,
+            password
+        });
+
+    return response.IsSuccessStatusCode
+        ? await response.Content.ReadFromJsonAsync<ApiLoginResponse>(Json)
+        : null;
+}
+
+public async Task<List<ApiApplicantApplication>> GetMyApplicationsAsync(
+    string bearerToken)
+{
+    using var request =
+        new HttpRequestMessage(
+            HttpMethod.Get,
+            "api/job-applications/mine");
+
+    request.Headers.Authorization =
+        new AuthenticationHeaderValue(
+            "Bearer",
+            bearerToken);
+
+    var response = await _http.SendAsync(request);
+
+    if (!response.IsSuccessStatusCode)
+        return new();
+
+    return await response.Content
+        .ReadFromJsonAsync<List<ApiApplicantApplication>>(Json)
+        ?? new();
+}
+
+public async Task<ApiApplicantApplication?> GetMyApplicationAsync(
+    int applicationId,
+    string bearerToken)
+{
+    using var request =
+        new HttpRequestMessage(
+            HttpMethod.Get,
+            $"api/job-applications/mine/{applicationId}");
+
+    request.Headers.Authorization =
+        new AuthenticationHeaderValue(
+            "Bearer",
+            bearerToken);
+
+    var response = await _http.SendAsync(request);
+
+    return response.IsSuccessStatusCode
+        ? await response.Content
+            .ReadFromJsonAsync<ApiApplicantApplication>(Json)
+        : null;
+}
+
+public async Task<(bool ok, string message)> UpdateMyApplicationAsync(
+    int applicationId,
+    ApiApplicantUpdateRequest payload,
+    string bearerToken)
+{
+    using var request =
+        new HttpRequestMessage(
+            HttpMethod.Put,
+            $"api/job-applications/mine/{applicationId}");
+
+    request.Headers.Authorization =
+        new AuthenticationHeaderValue(
+            "Bearer",
+            bearerToken);
+
+    request.Content =
+        JsonContent.Create(payload);
+
+    var response = await _http.SendAsync(request);
+
+    if (response.IsSuccessStatusCode)
+        return (true, "Application updated successfully.");
+
+    try
+    {
+        var error =
+            await response.Content.ReadFromJsonAsync<ApiMessage>(Json);
+
+        return (
+            false,
+            error?.Message ?? "The application could not be updated.");
+    }
+    catch
+    {
+        return (
+            false,
+            "The application could not be updated.");
+    }
+}
+
+public async Task<(bool ok, string message)> WithdrawMyApplicationAsync(
+    int applicationId,
+    string bearerToken)
+{
+    using var request =
+        new HttpRequestMessage(
+            HttpMethod.Post,
+            $"api/job-applications/mine/{applicationId}/withdraw");
+
+    request.Headers.Authorization =
+        new AuthenticationHeaderValue(
+            "Bearer",
+            bearerToken);
+
+    request.Content =
+        JsonContent.Create(new { });
+
+    var response = await _http.SendAsync(request);
+
+    if (response.IsSuccessStatusCode)
+        return (true, "Application withdrawn successfully.");
+
+    try
+    {
+        var error =
+            await response.Content.ReadFromJsonAsync<ApiMessage>(Json);
+
+        return (
+            false,
+            error?.Message ?? "The application could not be withdrawn.");
+    }
+    catch
+    {
+        return (
+            false,
+            "The application could not be withdrawn.");
+    }
+}
 
         /// <summary>OVC-247 — public supplier registration (Figure 20).</summary>
         public async Task<(bool ok, ApiSupplierRegistrationResult? result, string message)> RegisterSupplierAsync(object payload)
