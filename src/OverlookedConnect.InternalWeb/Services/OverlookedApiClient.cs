@@ -30,6 +30,15 @@ public sealed class OverlookedApiClient
         _logger = logger;
     }
 
+    /*
+    
+    (OVC-102): Added incident helpers below so the InternalWeb UI can request the incident register 
+    and individual incidents from the API. GetIncidentsAsync deserializes the API's paged response into a simple
+    list of ApiIncident objects. Methods deliberately throw for 401/403 so callers can 
+    redirect to sign-in or surface an appropriate message.
+    
+    */
+
 /// <summary>
 /// Helper model to deserialize API paged results used by several endpoints.
 /// </summary>

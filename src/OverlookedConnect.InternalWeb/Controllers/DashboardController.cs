@@ -18,6 +18,10 @@ using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers
 {
+    /*
+     (OVC-102): DashboardController.Index was modified to fetch the most recent Incidents from the backend API via OverlookedApiClient.
+     The result is mapped to the existing DemoData Incident view model and the controller falls back to DemoData when the API cannot be reached.
+    */
     public class DashboardController : Controller
     {
         private readonly OverlookedApiClient _api;

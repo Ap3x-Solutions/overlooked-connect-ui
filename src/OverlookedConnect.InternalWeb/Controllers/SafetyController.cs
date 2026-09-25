@@ -22,6 +22,15 @@ using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers
 {
+    /* 
+    
+    (OVC-102): SafetyController was updated to call the backend Incident API via OverlookedApiClient. 
+     The Index action attempts to load live incidents (requires a session-stored AccessToken) and
+     maps ApiIncident to the existing DemoData Incident view model so the Razor views do not
+     require changes. If the API call fails the controller falls back to the
+     local DemoData so the prototype remains functional during development.
+    
+    */
     public class SafetyController : Controller
     {
         private readonly OverlookedApiClient _api;
