@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Filters;
 
 /*
  This controller serves the Community & CSR Tracking module (FR-06, US-16) for the Executive role.
@@ -13,7 +14,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class CommunityController : Controller
+    [RequireRole("executive", "hr")]
+    public sealed class CommunityController : Controller
     {
         /* GET: Community/Index */
         public IActionResult Index() => View(DemoData.CsrProjects);

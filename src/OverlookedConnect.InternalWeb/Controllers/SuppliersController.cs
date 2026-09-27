@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
+using OverlookedConnect.Internal.Filters;
 
 /*
  Supplier Review Queue (OVC-267, Figure 26).
@@ -37,7 +38,8 @@ using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class SuppliersController : Controller
+    [RequireRole("executive", "hr", "procurement")]
+    public sealed class SuppliersController : Controller
     {
         private readonly OverlookedApiClient _api;
 

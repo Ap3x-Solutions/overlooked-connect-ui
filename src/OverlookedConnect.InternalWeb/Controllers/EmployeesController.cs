@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Filters;
 
 /*
  This controller serves the Employee Management module (FR-02, US-03), used by the HR & Operations role.
@@ -13,7 +14,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class EmployeesController : Controller
+    [RequireRole("hr", "executive")]
+    public sealed class EmployeesController : Controller
     {
         /* GET: Employees/Index */
         public IActionResult Index(string? businessUnit, string? status, string? search)

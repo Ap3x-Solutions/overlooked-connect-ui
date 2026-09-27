@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Filters;
 
 /*
  This controller serves the Executive-facing screens of the Internal Operations Platform:
@@ -17,7 +18,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class DashboardController : Controller
+    [RequireRole("executive", "hr", "procurement", "safety")]
+    public sealed class DashboardController : Controller
     {
         /* GET: Dashboard/Index */
         public IActionResult Index()

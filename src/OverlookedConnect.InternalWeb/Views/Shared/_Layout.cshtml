@@ -6,6 +6,7 @@
     var userName = Context.Session.GetString("UserName") ?? "T. Mahlangu";
     var userInitials = Context.Session.GetString("UserInitials") ?? "TM";
     var userRole = Context.Session.GetString("UserRole") ?? "Executive";
+    var roleKey = Context.Session.GetString("RoleKey") ?? "employee";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -33,14 +34,35 @@
         </div>
 
         <ul class="nav-list">
-            <li><a class="@Active("Dashboard")" asp-controller="Dashboard" asp-action="Index"><i class="fas fa-table-columns"></i> Dashboard</a></li>
-            <li><a class="@Active("Employees")" asp-controller="Employees" asp-action="Index"><i class="fas fa-users"></i> Employees</a></li>
-            <li><a class="@Active("Leave")" asp-controller="Leave" asp-action="Index"><i class="fas fa-calendar-days"></i> Leave &amp; Shifts</a></li>
-            <li><a class="@Active("Safety")" asp-controller="Safety" asp-action="Index"><i class="fas fa-triangle-exclamation"></i> Safety &amp; Incidents</a></li>
-            <li><a class="@Active("Suppliers")" asp-controller="Suppliers" asp-action="Index"><i class="fas fa-truck-field"></i> Suppliers</a></li>
-            <li><a class="@Active("Community")" asp-controller="Community" asp-action="Index"><i class="fas fa-hand-holding-heart"></i> Community &amp; CSR</a></li>
-            <li><a class="@Active("Reports","Audit")" asp-controller="Reports" asp-action="Index"><i class="fas fa-chart-column"></i> Reports</a></li>
-            <li><a class="@Active("Staff")" asp-controller="Staff" asp-action="Index"><i class="fas fa-id-badge"></i> Self-Service</a></li>
+            @if (roleKey is "executive" or "hr" or "procurement" or "safety")
+            {
+                <li><a class="@Active("Dashboard")" asp-controller="Dashboard" asp-action="Index"><i class="fas fa-table-columns"></i> Dashboard</a></li>
+            }
+            @if (roleKey is "executive" or "hr")
+            {
+                <li><a class="@Active("Employees")" asp-controller="Employees" asp-action="Index"><i class="fas fa-users"></i> Employees</a></li>
+            }
+            @if (roleKey is "executive" or "hr" or "employee")
+            {
+                <li><a class="@Active("Leave")" asp-controller="Leave" asp-action="Index"><i class="fas fa-calendar-days"></i> Leave &amp; Shifts</a></li>
+            }
+            @if (roleKey is "executive" or "hr" or "safety" or "employee")
+            {
+                <li><a class="@Active("Safety")" asp-controller="Safety" asp-action="Index"><i class="fas fa-triangle-exclamation"></i> Safety &amp; Incidents</a></li>
+            }
+            @if (roleKey is "executive" or "hr" or "procurement")
+            {
+                <li><a class="@Active("Suppliers")" asp-controller="Suppliers" asp-action="Index"><i class="fas fa-truck-field"></i> Suppliers</a></li>
+            }
+            @if (roleKey is "executive" or "hr")
+            {
+                <li><a class="@Active("Community")" asp-controller="Community" asp-action="Index"><i class="fas fa-hand-holding-heart"></i> Community &amp; CSR</a></li>
+                <li><a class="@Active("Reports")" asp-controller="Reports" asp-action="Index"><i class="fas fa-chart-column"></i> Reports</a></li>
+            }
+            @if (roleKey == "employee")
+            {
+                <li><a class="@Active("Staff")" asp-controller="Staff" asp-action="Index"><i class="fas fa-id-badge"></i> Self-Service</a></li>
+            }
         </ul>
 
         <div class="sidebar-user">

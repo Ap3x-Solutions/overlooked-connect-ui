@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Filters;
 
 /*
  This controller serves the Reports & Analytics module (FR-07, US-16). It generates and exports HR,
@@ -13,7 +14,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class ReportsController : Controller
+    [RequireRole("hr", "executive")]
+    public sealed class ReportsController : Controller
     {
         /* GET: Reports/Index */
         public IActionResult Index() => View(new ReportRequestModel());
