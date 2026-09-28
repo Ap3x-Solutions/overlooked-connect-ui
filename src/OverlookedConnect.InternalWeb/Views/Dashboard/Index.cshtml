@@ -1,3 +1,4 @@
+@using System.Linq
 @model DashboardViewModel
 @{
     ViewData["Title"] = "Management Dashboard";
@@ -17,26 +18,26 @@
 <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
         <div class="stat-card">
-            <div class="label">Active employees</div><div class="value">248</div>
-            <div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>+6 this month</div>
+            <div class="label">Open incidents</div>
+            <div class="value">@(Model.Summary?.OpenIncidents.ToString() ?? "—")</div>
         </div>
     </div>
     <div class="col-6 col-xl-3">
         <div class="stat-card">
-            <div class="label">Open incidents</div><div class="value">7</div>
-            <div class="delta" style="color:#C0392B;"><span class="pip" style="background:#C0392B;"></span>2 high severity</div>
+            <div class="label">Escalated incidents</div>
+            <div class="value">@(Model.Summary?.EscalatedIncidents.ToString() ?? "—")</div>
         </div>
     </div>
     <div class="col-6 col-xl-3">
         <div class="stat-card">
-            <div class="label">Pending suppliers</div><div class="value">12</div>
-            <div class="delta" style="color:#E08E0B;"><span class="pip" style="background:#E08E0B;"></span>4 awaiting documents</div>
+            <div class="label">Leave pending</div>
+            <div class="value">@(Model.Summary?.PendingLeaveRequests.ToString() ?? "—")</div>
         </div>
     </div>
     <div class="col-6 col-xl-3">
         <div class="stat-card">
-            <div class="label">LTIFR (12-month)</div><div class="value">0.11</div>
-            <div class="delta" style="color:#1E6B3A;"><span class="pip" style="background:#22A55B;"></span>Below 0.15 target</div>
+            <div class="label">Active vacancies</div>
+            <div class="value">@(Model.Summary?.ActiveVacancies.ToString() ?? "—")</div>
         </div>
     </div>
 </div>
@@ -99,17 +100,25 @@
                     <table class="data-table">
                         <thead><tr><th>Incident</th><th>Site</th><th>Severity</th><th>Status</th></tr></thead>
                         <tbody>
-                        @foreach (var i in Model.RecentIncidents)
-                        {
-                            <tr>
-                                <td class="t-strong">@i.IncidentId &middot; @i.Title</td>
-                                <td>@i.Site</td>
-                                <td>
-                                    <span class="pill @(i.Severity == "High" ? "pill-bad" : i.Severity == "Medium" ? "pill-warn" : "pill-ok")">@i.Severity</span>
-                                </td>
-                                <td class="text-muted">@i.InvestigationStatus</td>
-                            </tr>
-                        }
+                            @if (!Model.RecentIncidents.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-muted text-center py-3">
+                                        No incidents to display.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var i in Model.RecentIncidents)
+                            {
+                                <tr>
+                                    <td class="t-strong">@i.Reference &middot; @i.IncidentType</td>
+                                    <td>@i.Site</td>
+                                    <td>
+                                        <span class="pill @(i.Severity == "High" ? "pill-bad" : i.Severity == "Medium" ? "pill-warn" : "pill-ok")">@i.Severity</span>
+                                    </td>
+                                    <td class="text-muted">@i.Status</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>

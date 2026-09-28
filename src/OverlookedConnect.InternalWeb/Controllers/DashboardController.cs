@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
 
 /*
  This controller serves the Executive-facing screens of the Internal Operations Platform:
@@ -19,16 +20,55 @@ namespace OverlookedConnect.Internal.Controllers
 {
     public class DashboardController : Controller
     {
-        /* GET: Dashboard/Index */
-        public IActionResult Index()
+        private readonly OverlookedApiClient _apiClient;
+
+        public DashboardController(OverlookedApiClient apiClient)
         {
+            _apiClient = apiClient;
+        }
+
+        /* GET: Dashboard/Index */
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        {
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var summaryResult = await _apiClient.GetDashboardSummaryAsync(accessToken, cancellationToken);
+            var incidentsResult = await _apiClient.GetIncidentsAsync(
+                accessToken,
+                search: null, status: null, severity: null, site: null,
+                page: 1, pageSize: 4,
+                cancellationToken);
+
+            if (summaryResult.Status == ApiDashboardStatus.Unauthorized ||
+                incidentsResult.Status == ApiDashboardStatus.Unauthorized)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var model = new DashboardViewModel
             {
+                Summary = summaryResult.IsSuccess ? summaryResult.Data : null,
+                RecentIncidents = incidentsResult.IsSuccess
+                    ? incidentsResult.Data!.Items.ToList()
+                    : new List<ApiDashboardIncident>(),
+
                 Approvals = DemoData.Approvals,
-                RecentIncidents = DemoData.Incidents.Take(4).ToList(), /* [Microsoft Learn, [s.a.]] */
                 Production = DemoData.ProductionByMonth,
                 Workforce = DemoData.WorkforceByUnit
             };
+
+            if (!summaryResult.IsSuccess || !incidentsResult.IsSuccess)
+            {
+                TempData["ErrorMessage"] =
+                    "Some dashboard data could not be loaded from the server. " +
+                    "Displaying what is available.";
+            }
+
             return View(model);
         }
 
@@ -40,9 +80,9 @@ namespace OverlookedConnect.Internal.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Approve(string requester, string type)
         {
-            /* For demonstration/simulation purposes, it will just show a success message in the prototype. */
             TempData["SuccessMessage"] =
-                $"{type} request from {requester} approved. An audit entry has been written recording the acting user, timestamp and the value before and after the change.";
+                $"{type} request from {requester} approved. An audit entry has been " +
+                "written recording the acting user, timestamp and the value before and after the change.";
             return RedirectToAction("Approvals");
         }
 
@@ -52,12 +92,12 @@ namespace OverlookedConnect.Internal.Controllers
         public IActionResult Decline(string requester, string type)
         {
             TempData["SuccessMessage"] =
-                $"{type} request from {requester} declined. The requester has been notified and an audit entry recorded.";
+                $"{type} request from {requester} declined. The requester has been notified " +
+                "and an audit entry recorded.";
             return RedirectToAction("Approvals");
         }
     }
 }
-
 /*
     Reference List:
         - Microsoft Learn. [s.a.]. Enumerable.Take Method (System.Linq). [online]. Available at: <https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.take> [Accessed 14 August 2026].

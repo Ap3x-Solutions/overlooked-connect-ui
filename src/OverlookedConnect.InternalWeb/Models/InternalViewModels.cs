@@ -112,9 +112,12 @@ namespace OverlookedConnect.Internal.Models
     public class DashboardViewModel
     {
         public List<ApprovalItem> Approvals { get; set; } = new();
-        public List<Incident> RecentIncidents { get; set; } = new();
         public int[] Production { get; set; } = Array.Empty<int>();
         public List<(string Unit, int Headcount, string Colour)> Workforce { get; set; } = new();
+
+        // Live API data (OVC-105)
+        public OverlookedConnect.Internal.Services.ApiDashboardSummary? Summary { get; set; }
+        public List<OverlookedConnect.Internal.Services.ApiDashboardIncident> RecentIncidents { get; set; } = new();
     }
 
     public class SupplierQueueViewModel

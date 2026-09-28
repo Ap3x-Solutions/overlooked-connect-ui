@@ -787,6 +787,98 @@ public async Task<ApiIdentity?> ValidateTokenAsync(
                 cancellationToken);
     }
 
+    /* =========================================================
+   DASHBOARD & REPORTS  (OVC-105)
+   ========================================================= */
+
+    /// <summary>
+    /// GET /api/reports/dashboard-summary — aggregate counts for the Executive dashboard.
+    /// The merged OVC-90 endpoint is /api/reports/dashboard-summary. Wiring reflects the actual merged route.
+    /// </summary>
+    public async Task<ApiDashboardResult<ApiDashboardSummary>> GetDashboardSummaryAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var request = CreateAuthenticatedRequest(
+                HttpMethod.Get, "api/reports/dashboard-summary", accessToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return ApiDashboardResult<ApiDashboardSummary>.Unauthorized();
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+                return ApiDashboardResult<ApiDashboardSummary>.Forbidden();
+
+            if (!response.IsSuccessStatusCode)
+                return ApiDashboardResult<ApiDashboardSummary>.Failure(
+                    $"Dashboard summary failed with HTTP {(int)response.StatusCode}.");
+
+            var result = await response.Content
+                .ReadFromJsonAsync<ApiDashboardSummary>(JsonOptions, cancellationToken);
+
+            return result is null
+                ? ApiDashboardResult<ApiDashboardSummary>.Failure("The API returned an empty response.")
+                : ApiDashboardResult<ApiDashboardSummary>.Success(result);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Unable to connect to the Reports API.");
+            return ApiDashboardResult<ApiDashboardSummary>.Unavailable();
+        }
+    }
+
+    /// <summary>
+    /// GET /api/incidents — paginated, filterable incident register. Used by the dashboard's
+    /// "recent incidents" tile to pull the most recent 4 without loading the whole register.
+    /// </summary>
+    public async Task<ApiDashboardResult<PagedResult<ApiDashboardIncident>>> GetIncidentsAsync(
+        string accessToken,
+        string? search = null,
+        string? status = null,
+        string? severity = null,
+        string? site = null,
+        int page = 1,
+        int pageSize = 4,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var uri =
+                $"api/incidents?page={page}&pageSize={pageSize}" +
+                $"&search={Uri.EscapeDataString(search ?? string.Empty)}" +
+                $"&status={Uri.EscapeDataString(status ?? string.Empty)}" +
+                $"&severity={Uri.EscapeDataString(severity ?? string.Empty)}" +
+                $"&site={Uri.EscapeDataString(site ?? string.Empty)}";
+
+            using var request = CreateAuthenticatedRequest(HttpMethod.Get, uri, accessToken);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return ApiDashboardResult<PagedResult<ApiDashboardIncident>>.Unauthorized();
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+                return ApiDashboardResult<PagedResult<ApiDashboardIncident>>.Forbidden();
+
+            if (!response.IsSuccessStatusCode)
+                return ApiDashboardResult<PagedResult<ApiDashboardIncident>>.Failure(
+                    $"Incident lookup failed with HTTP {(int)response.StatusCode}.");
+
+            var result = await response.Content
+                .ReadFromJsonAsync<PagedResult<ApiDashboardIncident>>(JsonOptions, cancellationToken);
+
+            return result is null
+                ? ApiDashboardResult<PagedResult<ApiDashboardIncident>>.Failure("The API returned an empty response.")
+                : ApiDashboardResult<PagedResult<ApiDashboardIncident>>.Success(result);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Unable to connect to the Incidents API.");
+            return ApiDashboardResult<PagedResult<ApiDashboardIncident>>.Unavailable();
+        }
+    }
+
     /// <summary>
     /// Moves a supplier application into review.
     /// POST /api/suppliers/{id}/review
@@ -1312,4 +1404,99 @@ public sealed class ApiIncidentResult<T>
             ApiIncidentStatus.ApiFailure,
             default,
             message);
+}
+
+/* =========================================================
+   DASHBOARD & REPORTS  (OVC-105)
+   ========================================================= */
+
+/// <summary>
+/// Client-side projection of the API's DashboardSummaryDto, returned by
+/// GET /api/reports/dashboard-summary. Property names match the JSON keys 1:1.
+/// </summary>
+public sealed class ApiDashboardSummary
+{
+    public int OpenIncidents { get; set; }
+    public int EscalatedIncidents { get; set; }
+    public int PendingLeaveRequests { get; set; }
+    public int ActiveVacancies { get; set; }
+    public Dictionary<string, int> IncidentsBySeverity { get; set; } = new();
+}
+
+/// <summary>
+/// Client-side projection of the API's IncidentDto. Only the fields the dashboard tile
+/// renders are modelled here. Enums are serialised as strings by the API, so Severity
+/// and Status are typed as string.
+/// </summary>
+public sealed class ApiDashboardIncident
+{
+    public int Id { get; set; }
+    public string Reference { get; set; } = "";
+    public string IncidentType { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Site { get; set; } = "";
+    public string Severity { get; set; } = "";
+    public string Status { get; set; } = "";
+    public DateTime DateReported { get; set; }
+
+    public bool RequiresEscalation =>
+        Severity is "High" or "Fatal";
+}
+
+/// <summary>
+/// Mirror of the API's Application/Common/PagedResult;. Kept in the UI project so the
+/// Razor view can consume a strongly-typed paged result without referencing the Application layer.
+/// </summary>
+public sealed class PagedResult<T>
+{
+    public IReadOnlyList<T> Items { get; set; } = Array.Empty<T>();
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int Total { get; set; }
+    public int TotalPages => PageSize == 0 ? 0 : (int)Math.Ceiling(Total / (double)PageSize);
+}
+
+public enum ApiDashboardStatus
+{
+    Success,
+    Unauthorized,
+    Forbidden,
+    ApiUnavailable,
+    ApiFailure
+}
+
+public sealed class ApiDashboardResult<T>
+{
+    private ApiDashboardResult(
+        ApiDashboardStatus status,
+        T? data = default,
+        string? errorMessage = null)
+    {
+        Status = status;
+        Data = data;
+        ErrorMessage = errorMessage;
+    }
+
+    public ApiDashboardStatus Status { get; }
+    public T? Data { get; }
+    public string? ErrorMessage { get; }
+
+    public bool IsSuccess =>
+        Status == ApiDashboardStatus.Success &&
+        Data is not null;
+
+    public static ApiDashboardResult<T> Success(T data)
+        => new(ApiDashboardStatus.Success, data);
+
+    public static ApiDashboardResult<T> Unauthorized()
+        => new(ApiDashboardStatus.Unauthorized);
+
+    public static ApiDashboardResult<T> Forbidden()
+        => new(ApiDashboardStatus.Forbidden);
+
+    public static ApiDashboardResult<T> Unavailable()
+        => new(ApiDashboardStatus.ApiUnavailable);
+
+    public static ApiDashboardResult<T> Failure(string? message = null)
+        => new(ApiDashboardStatus.ApiFailure, default, message);
 }
