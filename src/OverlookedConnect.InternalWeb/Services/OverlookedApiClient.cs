@@ -30,6 +30,146 @@ public sealed class OverlookedApiClient
         _logger = logger;
     }
 
+/// <summary>
+/// Helper model to deserialize API paged results used by several endpoints.
+/// </summary>
+public sealed class ApiPagedResult<T>
+{
+    public List<T> Items { get; set; } = new();
+    public int Total { get; set; }
+}
+
+    /// <summary>
+/// Returns incidents from GET /api/incidents.
+/// The API returns a paged response and this method exposes the
+/// incident collection through the standard incident result wrapper.
+/// </summary>
+public async Task<ApiIncidentResult<IReadOnlyList<ApiIncident>>> GetIncidentsAsync(
+    string? status,
+    string accessToken,
+    CancellationToken cancellationToken = default)
+{
+    try
+    {
+        var requestUri = string.IsNullOrWhiteSpace(status)
+            ? "api/incidents"
+            : $"api/incidents?status={Uri.EscapeDataString(status)}";
+
+        using var request = CreateAuthenticatedRequest(
+            HttpMethod.Get,
+            requestUri,
+            accessToken);
+
+        using var response = await _httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Unauthorized();
+        }
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Forbidden();
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            string? errorMessage = null;
+
+            try
+            {
+                var problem = await response.Content
+                    .ReadFromJsonAsync<ApiProblemDetails>(
+                        JsonOptions,
+                        cancellationToken);
+
+                errorMessage =
+                    problem?.Message ??
+                    problem?.Detail ??
+                    problem?.Title;
+            }
+            catch (JsonException)
+            {
+                // Use the fallback message below.
+            }
+
+            return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Failure(
+                errorMessage ??
+                $"Incident retrieval failed with HTTP {(int)response.StatusCode}.");
+        }
+
+        var paged = await response.Content
+            .ReadFromJsonAsync<ApiPagedResult<ApiIncident>>(
+                JsonOptions,
+                cancellationToken);
+
+        if (paged is null)
+        {
+            return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Failure(
+                "The API returned an empty incident response.");
+        }
+
+        return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Success(
+            paged.Items);
+    }
+    catch (TaskCanceledException)
+        when (!cancellationToken.IsCancellationRequested)
+    {
+        _logger.LogWarning(
+            "Incident register request to the API timed out.");
+
+        return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Unavailable();
+    }
+    catch (HttpRequestException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Unable to connect to the Incident API.");
+
+        return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Unavailable();
+    }
+    catch (JsonException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Incident API returned invalid JSON.");
+
+        return ApiIncidentResult<IReadOnlyList<ApiIncident>>.Failure(
+            "The Incident API returned an invalid response.");
+    }
+}
+
+    /// <summary>
+    /// Returns a single incident by id: GET /api/incidents/{id}.
+    /// </summary>
+    public async Task<ApiIncident?> GetIncidentAsync(
+        int incidentId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateAuthenticatedRequest(
+            HttpMethod.Get,
+            $"api/incidents/{incidentId}",
+            accessToken);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return null;
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("The incidents API rejected the current session.");
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+            throw new InvalidOperationException("The signed-in user does not have permission to view incidents.");
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<ApiIncident>(JsonOptions, cancellationToken);
+    }
+
     // =========================================================
     // AUTHENTICATION
     // =========================================================
