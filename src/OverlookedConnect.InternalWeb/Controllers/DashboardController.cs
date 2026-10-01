@@ -35,6 +35,9 @@ namespace OverlookedConnect.Internal.Controllers
 
                 return RedirectToAction("Login", "Account");
             }
+            var summaryResult = await _api.GetDashboardSummaryAsync(
+                    accessToken,
+                    cancellationToken);
 
             var result = await _api.GetIncidentsAsync(
                 null,
@@ -84,15 +87,44 @@ namespace OverlookedConnect.Internal.Controllers
                         .ToList();
 
                     break;
-            }
 
-            var model = new DashboardViewModel
-            {
-                Approvals = DemoData.Approvals,
-                RecentIncidents = recent,
-                Production = DemoData.ProductionByMonth,
-                Workforce = DemoData.WorkforceByUnit
-            };
+            }
+            switch (summaryResult.Status)
+{
+    case ApiDashboardStatus.Unauthorized:
+        TempData["ErrorMessage"] =
+            "Your session has expired. Please sign in again.";
+
+        return RedirectToAction("Login", "Account");
+
+    case ApiDashboardStatus.Forbidden:
+        TempData["ErrorMessage"] =
+            "You do not have permission to view dashboard summary information.";
+        break;
+
+    case ApiDashboardStatus.ApiUnavailable:
+        TempData["ErrorMessage"] =
+            "Some live dashboard information is currently unavailable.";
+        break;
+
+    case ApiDashboardStatus.ApiFailure:
+        TempData["ErrorMessage"] =
+            summaryResult.ErrorMessage ??
+            "Some dashboard information could not be loaded.";
+        break;
+}
+
+          var model = new DashboardViewModel
+{
+    Summary = summaryResult.IsSuccess
+        ? summaryResult.Data
+        : null,
+
+    Approvals = DemoData.Approvals,
+    RecentIncidents = recent,
+    Production = DemoData.ProductionByMonth,
+    Workforce = DemoData.WorkforceByUnit
+};
 
             ViewBag.LiveData =
                 result.Status == ApiIncidentStatus.Success;

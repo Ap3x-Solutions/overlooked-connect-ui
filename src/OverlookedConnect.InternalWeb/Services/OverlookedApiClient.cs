@@ -38,6 +38,77 @@ public sealed class ApiPagedResult<T>
     public List<T> Items { get; set; } = new();
     public int Total { get; set; }
 }
+/// <summary>
+/// Returns aggregate statistics for the Executive dashboard.
+/// GET /api/reports/dashboard-summary.
+/// </summary>
+public async Task<ApiDashboardResult<ApiDashboardSummary>> GetDashboardSummaryAsync(
+    string accessToken,
+    CancellationToken cancellationToken = default)
+{
+    try
+    {
+        using var request = CreateAuthenticatedRequest(
+            HttpMethod.Get,
+            "api/reports/dashboard-summary",
+            accessToken);
+
+        using var response = await _httpClient.SendAsync(
+            request,
+            cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return ApiDashboardResult<ApiDashboardSummary>.Unauthorized();
+        }
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return ApiDashboardResult<ApiDashboardSummary>.Forbidden();
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return ApiDashboardResult<ApiDashboardSummary>.Failure(
+                $"Dashboard summary failed with HTTP {(int)response.StatusCode}.");
+        }
+
+        var result = await response.Content
+            .ReadFromJsonAsync<ApiDashboardSummary>(
+                JsonOptions,
+                cancellationToken);
+
+        return result is null
+            ? ApiDashboardResult<ApiDashboardSummary>.Failure(
+                "The API returned an empty dashboard summary.")
+            : ApiDashboardResult<ApiDashboardSummary>.Success(result);
+    }
+    catch (TaskCanceledException)
+        when (!cancellationToken.IsCancellationRequested)
+    {
+        _logger.LogWarning(
+            "Dashboard summary request to the Reports API timed out.");
+
+        return ApiDashboardResult<ApiDashboardSummary>.Unavailable();
+    }
+    catch (HttpRequestException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Unable to connect to the Reports API.");
+
+        return ApiDashboardResult<ApiDashboardSummary>.Unavailable();
+    }
+    catch (JsonException ex)
+    {
+        _logger.LogError(
+            ex,
+            "Reports API returned invalid dashboard summary JSON.");
+
+        return ApiDashboardResult<ApiDashboardSummary>.Failure(
+            "The Reports API returned an invalid dashboard summary.");
+    }
+}
 
     /// <summary>
 /// Returns incidents from GET /api/incidents.
@@ -1450,6 +1521,80 @@ public sealed class ApiIncidentResult<T>
         string? message = null)
         => new(
             ApiIncidentStatus.ApiFailure,
+            default,
+            message);
+
+}
+// =========================================================
+// DASHBOARD RESULT
+// =========================================================
+
+/// <summary>
+/// Aggregate statistics returned by
+/// GET /api/reports/dashboard-summary.
+/// </summary>
+public sealed class ApiDashboardSummary
+{
+    public int OpenIncidents { get; set; }
+
+    public int EscalatedIncidents { get; set; }
+
+    public int PendingLeaveRequests { get; set; }
+
+    public int ActiveVacancies { get; set; }
+
+    public Dictionary<string, int> IncidentsBySeverity { get; set; } = new();
+}
+
+public enum ApiDashboardStatus
+{
+    Success,
+    Unauthorized,
+    Forbidden,
+    ApiUnavailable,
+    ApiFailure
+}
+
+public sealed class ApiDashboardResult<T>
+{
+    private ApiDashboardResult(
+        ApiDashboardStatus status,
+        T? data = default,
+        string? errorMessage = null)
+    {
+        Status = status;
+        Data = data;
+        ErrorMessage = errorMessage;
+    }
+
+    public ApiDashboardStatus Status { get; }
+
+    public T? Data { get; }
+
+    public string? ErrorMessage { get; }
+
+    public bool IsSuccess =>
+        Status == ApiDashboardStatus.Success &&
+        Data is not null;
+
+    public static ApiDashboardResult<T> Success(T data)
+        => new(
+            ApiDashboardStatus.Success,
+            data);
+
+    public static ApiDashboardResult<T> Unauthorized()
+        => new(ApiDashboardStatus.Unauthorized);
+
+    public static ApiDashboardResult<T> Forbidden()
+        => new(ApiDashboardStatus.Forbidden);
+
+    public static ApiDashboardResult<T> Unavailable()
+        => new(ApiDashboardStatus.ApiUnavailable);
+
+    public static ApiDashboardResult<T> Failure(
+        string? message = null)
+        => new(
+            ApiDashboardStatus.ApiFailure,
             default,
             message);
 }
