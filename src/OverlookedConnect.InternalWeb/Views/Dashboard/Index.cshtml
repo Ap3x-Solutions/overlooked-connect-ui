@@ -23,8 +23,13 @@
     </div>
     <div class="col-6 col-xl-3">
         <div class="stat-card">
-            <div class="label">Open incidents</div><div class="value">7</div>
-            <div class="delta" style="color:#C0392B;"><span class="pip" style="background:#C0392B;"></span>2 high severity</div>
+            <div class="label">Open incidents</div>
+            <div class="value">@(Model.Summary?.OpenIncidents.ToString() ?? "—")</div>
+            <<div class="delta" style="color:#C0392B;">
+    <span class="pip" style="background:#C0392B;"></span>
+    @(Model.Summary is null
+        ? "Live data unavailable"
+        : $"{Model.Summary.EscalatedIncidents} escalated")</div>
         </div>
     </div>
     <div class="col-6 col-xl-3">
