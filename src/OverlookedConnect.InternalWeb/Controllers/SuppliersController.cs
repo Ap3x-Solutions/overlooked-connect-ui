@@ -1,4 +1,4 @@
-﻿using OverlookedConnect.Internal.Filters;
+using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
@@ -118,7 +118,7 @@ public class SuppliersController : Controller
                 list = GetDemoSuppliers(filter);
 
                 TempData["SuccessMessage"] ??=
-                    "The API is not reachable â€” showing Task 1 demonstration data.";
+                    "The API is not reachable — showing Task 1 demonstration data.";
             }
             catch (Exception)
             {
@@ -127,7 +127,7 @@ public class SuppliersController : Controller
                 list = GetDemoSuppliers(filter);
 
                 TempData["SuccessMessage"] ??=
-                    "Live supplier information is currently unavailable â€” showing Task 1 demonstration data.";
+                    "Live supplier information is currently unavailable — showing Task 1 demonstration data.";
             }
 
             var selected =
