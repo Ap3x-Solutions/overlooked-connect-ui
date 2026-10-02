@@ -1,9 +1,11 @@
+﻿using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers;
 
+[RequireRole("executive", "hr")]
 public class LeaveController : Controller
 {
     private readonly OverlookedApiClient _apiClient;
@@ -380,7 +382,7 @@ public async Task<IActionResult> Roster(
             LeaveType = request.LeaveType,
 
             Dates =
-                $"{request.StartDate:dd MMM yyyy} – {request.EndDate:dd MMM yyyy}",
+                $"{request.StartDate:dd MMM yyyy} â€“ {request.EndDate:dd MMM yyyy}",
 
             Days = request.Days,
 

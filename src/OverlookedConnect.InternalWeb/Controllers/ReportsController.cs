@@ -1,3 +1,4 @@
+using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 
@@ -13,7 +14,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class ReportsController : Controller
+    [RequireRole("executive", "hr")]
+public class ReportsController : Controller
     {
         /* GET: Reports/Index */
         public IActionResult Index() => View(new ReportRequestModel());

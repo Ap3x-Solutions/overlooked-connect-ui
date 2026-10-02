@@ -1,3 +1,4 @@
+using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 
@@ -13,7 +14,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class EmployeesController : Controller
+    [RequireRole("executive", "hr")]
+public class EmployeesController : Controller
     {
         /* GET: Employees/Index */
         public IActionResult Index(string? businessUnit, string? status, string? search)

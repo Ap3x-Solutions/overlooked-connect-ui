@@ -1,3 +1,4 @@
+using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
@@ -12,7 +13,8 @@ using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class DashboardController : Controller
+    [RequireRole("executive", "hr", "safety", "procurement")]
+public class DashboardController : Controller
     {
         private readonly OverlookedApiClient _api;
 
