@@ -1,3 +1,4 @@
+using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 
@@ -17,7 +18,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class AuditController : Controller
+    [RequireRole("executive", "hr")]
+public class AuditController : Controller
     {
         /* GET: Audit/Index */
         public IActionResult Index(string? filter)

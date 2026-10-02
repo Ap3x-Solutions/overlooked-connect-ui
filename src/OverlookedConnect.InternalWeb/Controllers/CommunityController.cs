@@ -1,3 +1,4 @@
+using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 
@@ -13,7 +14,8 @@ using OverlookedConnect.Internal.Models;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class CommunityController : Controller
+    [RequireRole("executive", "hr")]
+public class CommunityController : Controller
     {
         /* GET: Community/Index */
         public IActionResult Index() => View(DemoData.CsrProjects);

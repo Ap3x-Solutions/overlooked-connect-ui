@@ -1,3 +1,4 @@
+﻿using OverlookedConnect.Internal.Filters;
 using Microsoft.AspNetCore.Mvc;
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
@@ -37,7 +38,8 @@ using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers
 {
-    public class SuppliersController : Controller
+    [RequireRole("executive", "procurement")]
+public class SuppliersController : Controller
     {
         private readonly OverlookedApiClient _api;
 
@@ -116,7 +118,7 @@ namespace OverlookedConnect.Internal.Controllers
                 list = GetDemoSuppliers(filter);
 
                 TempData["SuccessMessage"] ??=
-                    "The API is not reachable — showing Task 1 demonstration data.";
+                    "The API is not reachable â€” showing Task 1 demonstration data.";
             }
             catch (Exception)
             {
@@ -125,7 +127,7 @@ namespace OverlookedConnect.Internal.Controllers
                 list = GetDemoSuppliers(filter);
 
                 TempData["SuccessMessage"] ??=
-                    "Live supplier information is currently unavailable — showing Task 1 demonstration data.";
+                    "Live supplier information is currently unavailable â€” showing Task 1 demonstration data.";
             }
 
             var selected =
