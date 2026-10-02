@@ -82,7 +82,7 @@ However, in the current UI, gold is only ever applied as:
 
 - Backgrounds for dark text (e.g. `.btn-gold` with `color: var(--navy-900)`)
 
-- Chart bars (`.chart .bar.gold` — decorative)
+- Chart bars (`.chart .bar.gold` - decorative)
 
 Gold is used exclusively as a decorative border, chart fill, and background for dark navy text.
 It's never applied as text on a light background in the current UI.
@@ -97,7 +97,7 @@ against WebAIM's Contrast Checker before merge.
 
 ---
 
-## 6. References
+## 7. References
 
 - WebAIM. [s.a.]. Contrast Checker. [online]. Available at:
   https://webaim.org/resources/contrastchecker/.
