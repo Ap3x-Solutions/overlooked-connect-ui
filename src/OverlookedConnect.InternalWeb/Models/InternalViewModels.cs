@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations; /* [Microsoft Learn, [s.a.]] */
+using System.ComponentModel.DataAnnotations; /* [Microsoft Learn, [s.a.]] */
 using Microsoft.AspNetCore.Http;
 
 /*
@@ -98,7 +98,7 @@ namespace OverlookedConnect.Internal.Models
 
         [Required(ErrorMessage = "Select a date range.")]
         [Display(Name = "Date range")]
-        public string DateRange { get; set; } = "01 Jul â€“ 31 Jul 2026";
+        public string DateRange { get; set; } = "01 Jul – 31 Jul 2026";
 
         [Display(Name = "Business unit")]
         public string BusinessUnit { get; set; } = "All units";
