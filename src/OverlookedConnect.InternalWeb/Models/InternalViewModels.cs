@@ -109,8 +109,8 @@ namespace OverlookedConnect.Internal.Models
 
     /* ---------------- Page view models ---------------- */
 
-  public class DashboardViewModel
-{
+    public class DashboardViewModel
+    {
     public List<ApprovalItem> Approvals { get; set; } = new();
     public List<Incident> RecentIncidents { get; set; } = new();
     public int[] Production { get; set; } = Array.Empty<int>();
@@ -118,7 +118,15 @@ namespace OverlookedConnect.Internal.Models
 
     // Live dashboard statistics from GET /api/reports/dashboard-summary.
     public OverlookedConnect.Internal.Services.ApiDashboardSummary? Summary { get; set; }
-}
+    }
+    public class EmployeeRegisterViewModel
+    {
+        public List<OverlookedConnect.Internal.Services.ApiEmployee> Employees { get; set; } = new();
+        public string? Search { get; set; }
+        public string? Status { get; set; }
+        public string? BusinessUnit { get; set; }
+        public int Total { get; set; }
+    }
     public class SupplierQueueViewModel
     {
         public List<SupplierApplication> Applications { get; set; } = new();
