@@ -25,7 +25,7 @@
         <div class="stat-card">
             <div class="label">Open incidents</div>
             <div class="value">@(Model.Summary?.OpenIncidents.ToString() ?? "—")</div>
-            <<div class="delta" style="color:#C0392B;">
+            <div class="delta" style="color:#C0392B;">
     <span class="pip" style="background:#C0392B;"></span>
     @(Model.Summary is null
         ? "Live data unavailable"
