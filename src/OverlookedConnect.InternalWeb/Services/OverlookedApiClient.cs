@@ -1,9 +1,36 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OverlookedConnect.Internal.Models;
+
+/*
+ * Shared API integration service for the Internal Web application.
+ *
+ * HttpClient is supplied through the typed client registration configured
+ * in Program.cs. Requests to protected API endpoints include the JWT access
+ * token in the HTTP Authorization header using the Bearer authentication
+ * scheme (Microsoft, [s.a.]a).
+ *
+ * System.Net.Http.Json is used to deserialize JSON API responses into the
+ * application's typed models (Microsoft, [s.a.]b).
+ *
+ * The client distinguishes authentication/authorization failures and handles
+ * unsuccessful HTTP responses, timeouts, connection failures and invalid JSON
+ * so that controllers can provide appropriate feedback to the user.
+ *
+ * References:
+ * Microsoft. [s.a.]a. AuthenticationHeaderValue Class.
+ * [online]. Available at:
+ * <https://learn.microsoft.com/en-us/dotnet/api/system.net.http.headers.authenticationheadervalue>
+ * [Accessed 4 October 2026].
+ *
+ * Microsoft. [s.a.]b. HttpClientJsonExtensions Class.
+ * [online]. Available at:
+ * <https://learn.microsoft.com/en-us/dotnet/api/system.net.http.json.httpclientjsonextensions>
+ * [Accessed 4 October 2026].
+ */
 
 namespace OverlookedConnect.Internal.Services;
 

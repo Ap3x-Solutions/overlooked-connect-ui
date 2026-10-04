@@ -2,6 +2,34 @@
 using OverlookedConnect.Internal.Models;
 using OverlookedConnect.Internal.Services;
 
+/*
+ * Authentication and session handling for the Internal Web application.
+ *
+ * ASP.NET Core session state is used to retain authenticated user context
+ * between requests after the shared API has successfully authenticated the
+ * user (Microsoft, [s.a.]a).
+ *
+ * POST login requests use ASP.NET Core anti-request-forgery validation to
+ * protect state-changing form submissions against cross-site request forgery
+ * attacks (Microsoft, [s.a.]b).
+ *
+ * The PublicWeb-to-InternalWeb sign-in handoff does not trust the supplied
+ * JWT directly. The token is validated against the shared API before an
+ * InternalWeb session is established.
+ *
+ * References:
+ * Microsoft. [s.a.]a. Session and state management in ASP.NET Core.
+ * [online]. Available at:
+ * <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state>
+ * [Accessed 4 October 2026].
+ *
+ * Microsoft. [s.a.]b. Prevent Cross-Site Request Forgery (XSRF/CSRF)
+ * attacks in ASP.NET Core.
+ * [online]. Available at:
+ * <https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery>
+ * [Accessed 4 October 2026].
+ */
+
 namespace OverlookedConnect.Internal.Controllers;
 
 public sealed class AccountController : Controller
