@@ -998,6 +998,119 @@ public async Task<ApiIdentity?> ValidateTokenAsync(
                 cancellationToken);
     }
 
+    // =========================================================
+    // EMPLOYEES  (OVC-99)
+    // =========================================================
+
+    /// <summary>
+    /// Returns the paged employee register from GET /api/employees.
+    /// The endpoint is protected by [Authorize(Roles = "HR,Executive")] and forwards
+    /// search/businessUnit/status filters to the server; no filtering is done here.
+    /// </summary>
+    public async Task<ApiEmployeeResult<ApiPagedResult<ApiEmployee>>> GetEmployeesAsync(
+        string? search,
+        string? businessUnit,
+        string? status,
+        int page,
+        int pageSize,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var query = $"api/employees?page={page}&pageSize={pageSize}";
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query += $"&search={Uri.EscapeDataString(search)}";
+
+            if (!string.IsNullOrWhiteSpace(businessUnit))
+                query += $"&businessUnit={Uri.EscapeDataString(businessUnit)}";
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query += $"&status={Uri.EscapeDataString(status)}";
+
+            using var request = CreateAuthenticatedRequest(
+                HttpMethod.Get,
+                query,
+                accessToken);
+
+            using var response = await _httpClient.SendAsync(
+                request,
+                cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Unauthorized();
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Forbidden();
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string? errorMessage = null;
+
+                try
+                {
+                    var problem = await response.Content
+                        .ReadFromJsonAsync<ApiProblemDetails>(
+                            JsonOptions,
+                            cancellationToken);
+
+                    errorMessage =
+                        problem?.Message ??
+                        problem?.Detail ??
+                        problem?.Title;
+                }
+                catch (JsonException)
+                {
+                    // Preserve the fallback message below.
+                }
+
+                return ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Failure(
+                    errorMessage ??
+                    $"Employee lookup failed with HTTP {(int)response.StatusCode}.");
+            }
+
+            var result = await response.Content
+                .ReadFromJsonAsync<ApiPagedResult<ApiEmployee>>(
+                    JsonOptions,
+                    cancellationToken);
+
+            return result is null
+                ? ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Failure(
+                    "The API returned an empty employee register.")
+                : ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Success(result);
+        }
+        catch (TaskCanceledException)
+            when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning(
+                "Employee register request to the API timed out.");
+
+            return ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Unavailable();
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(
+                ex,
+                "Unable to connect to the Employees API.");
+
+            return ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Unavailable();
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(
+                ex,
+                "Employees API returned invalid JSON.");
+
+            return ApiEmployeeResult<ApiPagedResult<ApiEmployee>>.Failure(
+                "The Employees API returned an invalid response.");
+        }
+    }
+
     /// <summary>
     /// Moves a supplier application into review.
     /// POST /api/suppliers/{id}/review
@@ -1597,4 +1710,77 @@ public sealed class ApiDashboardResult<T>
             ApiDashboardStatus.ApiFailure,
             default,
             message);
+}
+
+/* =========================================================
+   EMPLOYEES
+   ========================================================= */
+
+/// <summary>
+/// Client-side projection of the API's EmployeeDto, returned by GET /api/employees.
+/// Property names match the JSON keys 1:1 (System.Text.Json binds case-insensitively).
+/// Role, Site and LastLoginAtUtc are nullable because the API can return null for them.
+/// </summary>
+public sealed class ApiEmployee
+{
+    public int Id { get; set; }
+    public string EmployeeNumber { get; set; } = "";
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string FullName { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? Role { get; set; }
+    public string BusinessUnit { get; set; } = "";
+    public string JobTitle { get; set; } = "";
+    public string? Site { get; set; }
+    public decimal LeaveBalance { get; set; }
+    public DateTime HireDate { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime? LastLoginAtUtc { get; set; }
+}
+
+public enum ApiEmployeeStatus
+{
+    Success,
+    Unauthorized,
+    Forbidden,
+    ApiUnavailable,
+    ApiFailure
+}
+
+public sealed class ApiEmployeeResult<T>
+{
+    private ApiEmployeeResult(
+        ApiEmployeeStatus status,
+        T? data = default,
+        string? errorMessage = null)
+    {
+        Status = status;
+        Data = data;
+        ErrorMessage = errorMessage;
+    }
+
+    public ApiEmployeeStatus Status { get; }
+    public T? Data { get; }
+    public string? ErrorMessage { get; }
+
+    public bool IsSuccess =>
+        Status == ApiEmployeeStatus.Success &&
+        Data is not null;
+
+    public static ApiEmployeeResult<T> Success(T data)
+        => new(ApiEmployeeStatus.Success, data);
+
+    public static ApiEmployeeResult<T> Unauthorized()
+        => new(ApiEmployeeStatus.Unauthorized);
+
+    public static ApiEmployeeResult<T> Forbidden()
+        => new(ApiEmployeeStatus.Forbidden);
+
+    public static ApiEmployeeResult<T> Unavailable()
+        => new(ApiEmployeeStatus.ApiUnavailable);
+
+    public static ApiEmployeeResult<T> Failure(string? message = null)
+        => new(ApiEmployeeStatus.ApiFailure, default, message);
 }
