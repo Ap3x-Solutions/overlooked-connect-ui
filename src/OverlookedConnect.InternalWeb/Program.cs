@@ -1,3 +1,35 @@
+﻿/*
+ * Overlooked Connect - Internal Operations Web Application
+ *
+ * ASP.NET Core MVC is used to provide the presentation layer for the
+ * internal operations portal. Session state stores authenticated user
+ * context between HTTP requests, while the session cookie is configured
+ * as HttpOnly to reduce exposure to client-side scripts (Microsoft, [s.a.]a).
+ *
+ * IHttpClientFactory is used to configure the typed OverlookedApiClient
+ * that communicates with the shared Overlooked Connect REST API
+ * (Microsoft, [s.a.]b).
+ *
+ * HTTPS redirection and HTTP Strict Transport Security (HSTS) are enabled
+ * for secure production communication (Microsoft, [s.a.]c).
+ *
+ * References:
+ * Microsoft. [s.a.]a. Session and state management in ASP.NET Core.
+ * [online]. Available at:
+ * <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state>
+ * [Accessed 4 October 2026].
+ *
+ * Microsoft. [s.a.]b. Make HTTP requests using IHttpClientFactory in
+ * ASP.NET Core. [online]. Available at:
+ * <https://learn.microsoft.com/en-us/aspnet/core/fundamentals/http-requests>
+ * [Accessed 4 October 2026].
+ *
+ * Microsoft. [s.a.]c. Enforce HTTPS in ASP.NET Core.
+ * [online]. Available at:
+ * <https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl>
+ * [Accessed 4 October 2026].
+ */
+
 using OverlookedConnect.Internal.Services;
 
 var builder = WebApplication.CreateBuilder(args);
