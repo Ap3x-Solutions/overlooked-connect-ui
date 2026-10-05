@@ -1,0 +1,92 @@
+name: Deploy Internal Web to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: 'src/OverlookedConnect.InternalWeb/OverlookedConnect.InternalWeb.csproj'
+  AZURE_WEBAPP_NAME: 'app-overlooked-internal'
+
+jobs:
+  build:
+    name: Build Internal Web
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore solution
+        run: dotnet restore OverlookedConnect.UI.sln
+
+      - name: Build solution
+        run: >
+          dotnet build
+          OverlookedConnect.UI.sln
+          --configuration Release
+          --no-restore
+
+      - name: Run tests
+        run: >
+          dotnet test
+          OverlookedConnect.UI.sln
+          --configuration Release
+          --no-build
+
+      - name: Publish Internal Web
+        run: >
+          dotnet publish
+          ${{ env.PROJECT_PATH }}
+          --configuration Release
+          --no-restore
+          --output ${{ runner.temp }}/internal-web
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-web
+          path: ${{ runner.temp }}/internal-web
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy Internal Web
+    runs-on: ubuntu-latest
+    needs: build
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: internal-web
+          path: ./publish
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_INTERNAL_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_INTERNAL_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_INTERNAL_SUBSCRIPTION_ID }}
+
+      - name: Deploy Internal Web
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: Production
+          package: ./publish
