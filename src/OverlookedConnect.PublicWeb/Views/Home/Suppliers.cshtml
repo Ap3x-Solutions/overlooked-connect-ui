@@ -1,4 +1,4 @@
-﻿@model OverlookedConnect.PublicWeb.Models.SupplierRegistrationModel
+@model OverlookedConnect.PublicWeb.Models.SupplierRegistrationModel
 @{
     ViewData["Title"] = "Register as a Supplier";
 }
@@ -106,6 +106,14 @@
                         <input asp-for="ContactNumber" class="form-control" placeholder="082 445 1102" />
                         <span asp-validation-for="ContactNumber" class="text-danger small"></span>
                     </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label">Choose a password *</label>
+                                <input asp-for="Password" type="password" class="form-control"
+                                       placeholder="At least 8 characters" />
+                                <div class="form-text">Used to sign in and track your application status.</div>
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
                     <div class="col-md-6 mb-3">
                         <label asp-for="Province" class="form-label">Province *</label>
                         <select asp-for="Province" class="form-select">

@@ -1,0 +1,424 @@
+@model OverlookedConnect.PublicWeb.Models.ApplicantApplicationModel
+
+@{
+    ViewData["Title"] = "Application Details";
+}
+
+<style>
+    .application-page {
+        background: #f7f5f0;
+        min-height: 70vh;
+        padding-bottom: 70px;
+    }
+
+    .application-hero {
+        background: #17345f;
+        color: white;
+        padding: 42px 0;
+        border-right: 6px solid #d9a536;
+    }
+
+    .application-container {
+        width: min(1050px, 92%);
+        margin: 0 auto;
+    }
+
+    .application-eyebrow {
+        color: #f0b83e;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .application-hero h1 {
+        margin: 0 0 8px;
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .application-hero p {
+        margin: 0;
+        color: #d9e2ef;
+    }
+
+    .application-content {
+        padding-top: 36px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #17345f;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+
+    .back-link:hover {
+        color: #c28b24;
+    }
+
+    .details-card {
+        background: white;
+        border: 1px solid #e0e3e8;
+        border-radius: 8px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(16, 40, 75, 0.05);
+    }
+
+    .details-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        padding-bottom: 22px;
+        border-bottom: 1px solid #e8ebef;
+    }
+
+    .details-header h2 {
+        color: #10284b;
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 6px;
+    }
+
+    .vacancy-meta {
+        color: #667085;
+        margin: 0;
+    }
+
+    .status-badge {
+        background: #e9f2ff;
+        color: #245a9b;
+        padding: 7px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .reference-panel {
+        background: #f7f9fc;
+        border-left: 4px solid #d9a536;
+        padding: 16px 18px;
+        margin: 24px 0;
+    }
+
+    .reference-label {
+        display: block;
+        color: #687386;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: .5px;
+        margin-bottom: 4px;
+    }
+
+    .reference-number {
+        color: #10284b;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .details-section {
+        margin-top: 28px;
+    }
+
+    .details-section h3 {
+        color: #10284b;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 18px;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 22px 30px;
+    }
+
+    .detail-item {
+        border-bottom: 1px solid #edf0f3;
+        padding-bottom: 12px;
+    }
+
+    .detail-label {
+        display: block;
+        color: #7a8492;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 5px;
+    }
+
+    .detail-value {
+        color: #25344a;
+        font-size: 14px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .details-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        border-top: 1px solid #e8ebef;
+        margin-top: 30px;
+        padding-top: 22px;
+    }
+
+    .portal-btn {
+        display: inline-block;
+        padding: 10px 17px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .portal-btn-primary {
+        background: #10284b;
+        color: white;
+        border: 1px solid #10284b;
+    }
+
+    .portal-btn-primary:hover {
+        color: white;
+        background: #1d3d6b;
+    }
+
+    .portal-btn-secondary {
+        background: white;
+        color: #10284b;
+        border: 1px solid #10284b;
+    }
+
+    .portal-btn-danger {
+        background: white;
+        color: #a12828;
+        border: 1px solid #d4a1a1;
+    }
+
+    @@media (max-width: 700px) {
+        .details-header {
+            flex-direction: column;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<section class="application-page">
+
+    <div class="application-hero">
+        <div class="application-container">
+
+            <div class="application-eyebrow">
+                Careers at Overlooked
+            </div>
+
+            <h1>Application details</h1>
+
+            <p>
+                Review the information submitted with your application.
+            </p>
+
+        </div>
+    </div>
+
+    <div class="application-container application-content">
+
+        <a asp-controller="ApplicantPortal"
+           asp-action="Dashboard"
+           class="back-link">
+
+            <i class="fas fa-arrow-left"></i>
+            Back to my applications
+
+        </a>
+
+        <div class="details-card">
+
+            <div class="details-header">
+
+                <div>
+                    <h2>@Model.VacancyTitle</h2>
+
+                    <p class="vacancy-meta">
+                        @Model.Department
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Location))
+                        {
+                            <span> • @Model.Location</span>
+                        }
+                    </p>
+                </div>
+
+                <span class="status-badge">
+                    @Model.Status
+                </span>
+
+            </div>
+
+            <div class="reference-panel">
+
+                <span class="reference-label">
+                    Application reference
+                </span>
+
+                <span class="reference-number">
+                    @Model.Reference
+                </span>
+
+            </div>
+
+            <div class="details-section">
+
+                <h3>Applicant information</h3>
+
+                <div class="details-grid">
+
+                    <div class="detail-item">
+                        <span class="detail-label">Full name</span>
+                        <span class="detail-value">
+                            @Model.ApplicantName
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Email address</span>
+                        <span class="detail-value">
+                            @Model.ApplicantEmail
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Contact number</span>
+                        <span class="detail-value">
+                            @Model.PhoneNumber
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">ID number</span>
+                        <span class="detail-value">
+                            @Model.IdNumber
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Qualification</span>
+                        <span class="detail-value">
+                            @Model.Qualification
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">
+                            Years of experience
+                        </span>
+
+                        <span class="detail-value">
+                            @Model.YearsExperience
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="details-section">
+
+                <h3>Application information</h3>
+
+                <div class="details-grid">
+
+                    <div class="detail-item">
+                        <span class="detail-label">Position</span>
+                        <span class="detail-value">
+                            @Model.VacancyTitle
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Location</span>
+                        <span class="detail-value">
+                            @Model.Location
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value">
+                            @Model.Status
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Submitted</span>
+                        <span class="detail-value">
+                            @Model.SubmittedAt.ToString("dd MMMM yyyy HH:mm")
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="details-actions">
+
+                <a asp-controller="ApplicantPortal"
+                   asp-action="Dashboard"
+                   class="portal-btn portal-btn-secondary">
+
+                    Back to applications
+
+                </a>
+
+                @if (Model.CanEdit)
+                {
+                    <a asp-controller="ApplicantPortal"
+                       asp-action="Edit"
+                       asp-route-id="@Model.ApplicationId"
+                       class="portal-btn portal-btn-primary">
+
+                        Edit application
+
+                    </a>
+                }
+
+                @if (Model.CanWithdraw)
+                {
+                    <form asp-controller="ApplicantPortal"
+                          asp-action="Withdraw"
+                          asp-route-id="@Model.ApplicationId"
+                          method="post"
+                          style="display:inline;">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="portal-btn portal-btn-danger"
+                                onclick="return confirm('Are you sure you want to withdraw this application?');">
+
+                            Withdraw application
+
+                        </button>
+
+                    </form>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>

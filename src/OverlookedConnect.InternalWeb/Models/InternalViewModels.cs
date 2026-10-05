@@ -15,29 +15,25 @@ using Microsoft.AspNetCore.Http;
 
 namespace OverlookedConnect.Internal.Models
 {
-    public class LoginModel /* [Microsoft Learn, [s.a.]] */
-    {
-        [Required(ErrorMessage = "Email address is required.")] /* [Microsoft Learn, [s.a.]] */
-        [EmailAddress(ErrorMessage = "Invalid email address.")]
-        [StringLength(100)]
-        [Display(Name = "Email address")]
-        public string Email { get; set; } = "";
+   public class LoginModel
+{
+    [Required(ErrorMessage = "Email address is required.")]
+    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+    [StringLength(100)]
+    [Display(Name = "Email address")]
+    public string Email { get; set; } = "";
 
-        [Required(ErrorMessage = "Password is required.")]
-        [DataType(DataType.Password)]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters.")]
-        public string Password { get; set; } = "";
+    [Required(ErrorMessage = "Password is required.")]
+    [DataType(DataType.Password)]
+    [StringLength(
+        100,
+        MinimumLength = 6,
+        ErrorMessage = "Password must be at least 6 characters.")]
+    public string Password { get; set; } = "";
 
-        [Display(Name = "Keep me signed in on this device")]
-        public bool RememberMe { get; set; }
-
-        /* Demonstration only. In Task 2 the role is read from the Microsoft Entra External ID
-           role claim rather than selected on the sign-in form. See Section 8.2. */
-        [Required(ErrorMessage = "Select a role to demonstrate.")]
-        [Display(Name = "Sign in as")]
-        public string DemoRole { get; set; } = "executive";
-    }
-
+    [Display(Name = "Keep me signed in on this device")]
+    public bool RememberMe { get; set; }
+}
     public class StaffLeaveRequestModel
     {
         [Required(ErrorMessage = "Leave type is required.")]
@@ -62,27 +58,37 @@ namespace OverlookedConnect.Internal.Models
         public IFormFile? SupportingDocument { get; set; }
     }
 
-    public class IncidentCaptureModel
-    {
-        [Required(ErrorMessage = "Severity must be selected from the list.")]
-        public string Severity { get; set; } = "";
+   public class IncidentCaptureModel
+{
+    [Required(ErrorMessage = "Severity must be selected from the list.")]
+    public string Severity { get; set; } = "";
 
-        [Required(ErrorMessage = "Incident type is required.")]
-        [Display(Name = "Incident type")]
-        public string IncidentType { get; set; } = "";
+    [Required(ErrorMessage = "Incident type is required.")]
+    [Display(Name = "Incident type")]
+    public string IncidentType { get; set; } = "";
 
-        [Required(ErrorMessage = "A description is required.")]
-        [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must be between 10 and 500 characters.")]
-        public string Description { get; set; } = "";
+    [Required(ErrorMessage = "A description is required.")]
+    [StringLength(
+        500,
+        MinimumLength = 10,
+        ErrorMessage = "Description must be between 10 and 500 characters.")]
+    public string Description { get; set; } = "";
 
-        [Display(Name = "Photographic evidence")]
-        public List<IFormFile>? Photos { get; set; }
+    [Required(ErrorMessage = "Site is required.")]
+    [Display(Name = "Site")]
+    public string Site { get; set; } = "Forzando South";
 
-        /* Captured server-side rather than from the device, so that clock drift cannot alter
-           the safety register. See NFR-08 and Section 6.4 of the documentation. */
-        [Display(Name = "Location")]
-        public string? Location { get; set; }
-    }
+    [Display(Name = "Location")]
+    public string? Location { get; set; }
+
+    /*
+     * The current incident API does not support photographic
+     * evidence yet. This property is retained so that the
+     * existing UI model remains compatible with the prototype.
+     */
+    [Display(Name = "Photographic evidence")]
+    public List<IFormFile>? Photos { get; set; }
+}
 
     public class ReportRequestModel
     {
@@ -105,12 +111,31 @@ namespace OverlookedConnect.Internal.Models
 
     public class DashboardViewModel
     {
-        public List<ApprovalItem> Approvals { get; set; } = new();
-        public List<Incident> RecentIncidents { get; set; } = new();
-        public int[] Production { get; set; } = Array.Empty<int>();
-        public List<(string Unit, int Headcount, string Colour)> Workforce { get; set; } = new();
-    }
+    public List<ApprovalItem> Approvals { get; set; } = new();
+    public List<Incident> RecentIncidents { get; set; } = new();
+    public int[] Production { get; set; } = Array.Empty<int>();
+    public List<(string Unit, int Headcount, string Colour)> Workforce { get; set; } = new();
 
+    // Live dashboard statistics from GET /api/reports/dashboard-summary.
+    public OverlookedConnect.Internal.Services.ApiDashboardSummary? Summary { get; set; }
+    }
+   public class EmployeeRegisterViewModel
+{
+    public List<OverlookedConnect.Internal.Services.ApiEmployee> Employees
+        { get; set; } = new();
+
+    public string? Search { get; set; }
+    public string? Status { get; set; }
+    public string? BusinessUnit { get; set; }
+
+    public int Total { get; set; }
+
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
+
+    public int TotalPages =>
+        (int)Math.Ceiling((double)Total / PageSize);
+}
     public class SupplierQueueViewModel
     {
         public List<SupplierApplication> Applications { get; set; } = new();
@@ -122,6 +147,42 @@ namespace OverlookedConnect.Internal.Models
         public List<Incident> Incidents { get; set; } = new();
         public Incident? Selected { get; set; }
     }
+
+
+public class StaffHomeViewModel
+{
+    public string EmployeeName { get; set; } = "";
+
+    public string EmployeeNumber { get; set; } = "";
+
+    public List<ApiShift> Shifts { get; set; } = new();
+
+    public ApiShift? NextShift =>
+        Shifts
+            .Where(x => x.ShiftDate.Date >= DateTime.Today)
+            .OrderBy(x => x.ShiftDate)
+            .FirstOrDefault();
+
+    public string Initials
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(EmployeeName))
+            {
+                return "E";
+            }
+
+            var parts = EmployeeName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+            return string.Concat(
+                parts
+                    .Take(2)
+                    .Select(x => char.ToUpperInvariant(x[0])));
+        }
+    }
+}
 }
 
 /*

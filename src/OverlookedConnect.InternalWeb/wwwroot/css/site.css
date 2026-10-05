@@ -1,3 +1,24 @@
+﻿/*
+ * Overlooked Connect - Internal Web responsive and accessible styling.
+ *
+ * Responsive CSS media queries adapt presentation to different viewport
+ * sizes (MDN Web Docs, [s.a.]).
+ *
+ * Visible keyboard focus indicators are retained for interactive controls
+ * to support keyboard navigation in accordance with WCAG focus visibility
+ * guidance (W3C, 2024).
+ *
+ * References:
+ * MDN Web Docs. [s.a.]. Using media queries.
+ * [online]. Available at:
+ * <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries>
+ * [Accessed 4 October 2026].
+ *
+ * W3C. 2024. Understanding Success Criterion 2.4.7: Focus Visible.
+ * [online]. Available at:
+ * <https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html>
+ * [Accessed 4 October 2026].
+ */
 html {
   font-size: 14px;
 }

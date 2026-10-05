@@ -1,0 +1,163 @@
+@model OverlookedConnect.PublicWeb.Models.ApplicantRegisterModel
+
+@{
+    ViewData["Title"] = "Create Applicant Account";
+}
+
+<div class="page-hero">
+    <div class="container">
+        <span class="eyebrow">CAREERS AT OVERLOOKED</span>
+        <h1>Create your applicant account</h1>
+
+        <div class="breadcrumb-trail">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            &rsaquo;
+            <a asp-controller="Home" asp-action="Careers">Careers</a>
+            &rsaquo; Register
+        </div>
+    </div>
+</div>
+
+<div class="container py-5" style="max-width: 760px;">
+
+    <div class="card p-4 p-md-5">
+
+        <div class="text-center mb-4">
+            <div class="mb-3">
+                <i class="fas fa-user-plus"
+                   style="font-size:2rem; color:var(--gold-dark);"></i>
+            </div>
+
+            <h3 class="mb-2">Applicant registration</h3>
+
+            <p class="text-muted mb-0">
+                Create an account to track and manage your
+                applications with Overlooked Group.
+            </p>
+        </div>
+
+        <form asp-controller="ApplicantPortal"
+              asp-action="Register"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="FullName"
+                       class="form-label">
+                    Full name *
+                </label>
+
+                <input asp-for="FullName"
+                       class="form-control"
+                       autocomplete="name"
+                       placeholder="Enter your full name" />
+
+                <span asp-validation-for="FullName"
+                      class="text-danger d-block">
+                </span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email"
+                       class="form-label">
+                    Email address *
+                </label>
+
+                <input asp-for="Email"
+                       class="form-control"
+                       autocomplete="email"
+                       placeholder="you@example.co.za" />
+
+                <span asp-validation-for="Email"
+                      class="text-danger d-block">
+                </span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Password"
+                           class="form-label">
+                        Password *
+                    </label>
+
+                    <input asp-for="Password"
+                           class="form-control"
+                           autocomplete="new-password"
+                           placeholder="Minimum 8 characters" />
+
+                    <span asp-validation-for="Password"
+                          class="text-danger d-block">
+                    </span>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="ConfirmPassword"
+                           class="form-label">
+                        Confirm password *
+                    </label>
+
+                    <input asp-for="ConfirmPassword"
+                           class="form-control"
+                           autocomplete="new-password"
+                           placeholder="Repeat your password" />
+
+                    <span asp-validation-for="ConfirmPassword"
+                          class="text-danger d-block">
+                    </span>
+
+                </div>
+            </div>
+
+            <div class="info-note mt-2">
+                <i class="fas fa-shield-halved me-2"></i>
+                Your account is used to securely access your
+                Overlooked careers applications.
+            </div>
+
+            <button type="submit"
+                    class="btn btn-navy w-100 mt-2">
+                Create applicant account
+            </button>
+
+        </form>
+
+        <hr class="my-4" />
+
+        <div class="text-center">
+            <p class="text-muted mb-2">
+                Already have an applicant account?
+            </p>
+
+            <a asp-controller="ApplicantPortal"
+               asp-action="Login"
+               class="fw-semibold"
+               style="color:var(--navy-900);">
+                Sign in to your account
+                <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-controller="Home"
+           asp-action="Careers"
+           class="text-muted">
+            <i class="fas fa-arrow-left me-1"></i>
+            Return to current vacancies
+        </a>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
