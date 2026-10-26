@@ -142,6 +142,38 @@ public async Task<ApiDashboardResult<ApiDashboardSummary>> GetDashboardSummaryAs
 /// The API returns a paged response and this method exposes the
 /// incident collection through the standard incident result wrapper.
 /// </summary>
+///
+public async Task<HttpResponseMessage> ExportReportAsync(
+    string reportType,
+    string? businessUnit,
+    string accessToken,
+    CancellationToken cancellationToken = default)
+{
+    var query = new List<string>
+    {
+        $"reportType={Uri.EscapeDataString(reportType)}"
+    };
+
+    if (!string.IsNullOrWhiteSpace(businessUnit))
+    {
+        query.Add(
+            $"businessUnit={Uri.EscapeDataString(businessUnit)}");
+    }
+
+    var url = "api/reports/export?" + string.Join("&", query);
+
+    using var request = CreateAuthenticatedRequest(
+        HttpMethod.Get,
+        url,
+        accessToken);
+
+    // Caller owns the returned response and must dispose it.
+    return await _httpClient.SendAsync(
+        request,
+        HttpCompletionOption.ResponseHeadersRead,
+        cancellationToken);
+}
+
 public async Task<ApiIncidentResult<IReadOnlyList<ApiIncident>>> GetIncidentsAsync(
     string? status,
     string accessToken,
