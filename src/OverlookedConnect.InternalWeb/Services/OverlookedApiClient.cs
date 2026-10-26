@@ -1358,6 +1358,63 @@ public async Task<ApiIdentity?> ValidateTokenAsync(
             ? ApiLeaveResult<T>.Failure()
             : ApiLeaveResult<T>.Success(result);
     }
+  /// <summary>
+/// Retrieves paginated audit records from GET /api/audit.
+/// Only authorised users can access this endpoint.
+/// </summary>
+public async Task<ApiAuditPage> GetAuditLogsAsync(
+    string? action,
+    int page,
+    int pageSize,
+    string accessToken,
+    CancellationToken cancellationToken = default)
+{
+    var query = new List<string>
+    {
+        $"page={page}",
+        $"pageSize={pageSize}"
+    };
+
+    if (!string.IsNullOrWhiteSpace(action) &&
+        !string.Equals(action, "All actions",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        query.Add(
+            $"action={Uri.EscapeDataString(action)}");
+    }
+
+    var url = "api/audit?" + string.Join("&", query);
+
+    using var request = CreateAuthenticatedRequest(
+        HttpMethod.Get,
+        url,
+        accessToken);
+
+    using var response = await _httpClient.SendAsync(
+        request,
+        cancellationToken);
+
+    if (response.StatusCode == HttpStatusCode.Unauthorized)
+    {
+        throw new UnauthorizedAccessException(
+            "Your session has expired.");
+    }
+
+    if (response.StatusCode == HttpStatusCode.Forbidden)
+    {
+        throw new UnauthorizedAccessException(
+            "You do not have permission to view audit records.");
+    }
+
+    response.EnsureSuccessStatusCode();
+
+    var result = await response.Content.ReadFromJsonAsync<ApiAuditPage>(
+        JsonOptions,
+        cancellationToken);
+
+    return result ?? throw new JsonException(
+        "The Audit API returned an invalid response.");
+}
 
     /// <summary>
     /// Creates an authenticated request for API integrations such as
@@ -1810,4 +1867,36 @@ public sealed class ApiEmployeeResult<T>
 
     public static ApiEmployeeResult<T> Failure(string? message = null)
         => new(ApiEmployeeStatus.ApiFailure, default, message);
+
+
+}
+// =========================================================
+// AUDIT API RESPONSE MODELS
+// =========================================================
+
+public sealed class ApiAuditPage
+{
+    public int Total { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+
+    public List<ApiAuditEntry> Entries { get; set; } = new();
+}
+
+public sealed class ApiAuditEntry
+{
+    public int Id { get; set; }
+    public DateTime Timestamp { get; set; }
+
+    public string Action { get; set; } = "";
+    public string EntityName { get; set; } = "";
+
+    public int EntityId { get; set; }
+    public int UserId { get; set; }
+
+    public string UserName { get; set; } = "";
+    public string Role { get; set; } = "";
+
+    public string? OldValue { get; set; }
+    public string? NewValue { get; set; }
 }
