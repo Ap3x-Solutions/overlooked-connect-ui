@@ -1,45 +1,135 @@
-using OverlookedConnect.Internal.Filters;
+
 using Microsoft.AspNetCore.Mvc;
+using OverlookedConnect.Internal.Filters;
 using OverlookedConnect.Internal.Models;
+using OverlookedConnect.Internal.Services;
 
-/*
- This controller serves the Reports & Analytics module (FR-07, US-16). It generates and exports HR,
- safety, supplier and ESG reports in PDF and spreadsheet formats.
+namespace OverlookedConnect.Internal.Controllers;
 
- Report generation is simulated in Task 1. In Task 2 the export is produced server-side and the
- request is scoped to the signed-in user's role, so that a Safety Officer cannot export payroll data
- and an HR administrator cannot export the audit log. That scoping is part of the least-privilege
- principle described in Section 8.1.
- */
-
-namespace OverlookedConnect.Internal.Controllers
-{
-    [RequireRole("executive", "hr")]
+[RequireRole("executive", "hr")]
 public class ReportsController : Controller
+{
+    private readonly OverlookedApiClient _api;
+
+    public ReportsController(OverlookedApiClient api)
     {
-        /* GET: Reports/Index */
-        public IActionResult Index() => View(new ReportRequestModel());
+        _api = api;
+    }
 
-        /* POST: Reports/Generate */
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Generate(ReportRequestModel model)
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return View(new ReportRequestModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Generate(
+        ReportRequestModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                return View("Index", model);
-            }
+            return View("Index", model);
+        }
 
-            /* For demonstration/simulation purposes, it will just show a success message in the prototype. */
-            TempData["SuccessMessage"] =
-                $"{model.ReportType} generated for {model.DateRange} ({model.BusinessUnit}) in {model.Format} format. The export has been queued for download.";
+        var supportedReports = new[]
+        {
+            "Safety incident summary",
+            "Workforce headcount",
+            "Leave register"
+        };
+
+        if (!supportedReports.Contains(
+                model.ReportType,
+                StringComparer.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(
+                nameof(model.ReportType),
+                "The selected report is not available.");
+
+            return View("Index", model);
+        }
+
+        if (!string.Equals(
+                model.Format,
+                "CSV",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(
+                nameof(model.Format),
+                "Only CSV export is currently supported.");
+
+            return View("Index", model);
+        }
+
+        var accessToken =
+            HttpContext.Session.GetString("AccessToken");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            TempData["ErrorMessage"] =
+                "Your session has expired. Please sign in again.";
+
+            return RedirectToAction("Login", "Account");
+        }
+try
+{
+    using var response = await _api.ExportReportAsync(
+        model.ReportType,
+        model.BusinessUnit,
+        accessToken,
+        cancellationToken);
+
+    if (response.StatusCode ==
+        System.Net.HttpStatusCode.Unauthorized)
+    {
+        TempData["ErrorMessage"] =
+            "Your session has expired. Please sign in again.";
+
+        return RedirectToAction("Login", "Account");
+    }
+
+    if (response.StatusCode ==
+        System.Net.HttpStatusCode.Forbidden)
+    {
+        ModelState.AddModelError(
+            string.Empty,
+            "You do not have permission to export this report.");
+
+        return View("Index", model);
+    }
+
+    response.EnsureSuccessStatusCode();
+
+    var content = await response.Content.ReadAsByteArrayAsync(
+        cancellationToken);
+
+    var fileName =
+        response.Content.Headers.ContentDisposition?.FileNameStar
+        ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+        ?? "overlooked-report.csv";
+
+    return File(
+        content,
+        "text/csv; charset=utf-8",
+        fileName);
+}
+catch (HttpRequestException)
+{
+    ModelState.AddModelError(
+        string.Empty,
+        "The report could not be downloaded. Please try again.");
+
+    return View("Index", model);
+}
+
+        catch (UnauthorizedAccessException)
+        {
+            TempData["ErrorMessage"] =
+                "Your session has expired or you are not authorised.";
+
             return RedirectToAction("Index");
         }
     }
 }
-
-/*
-    Reference List:
-        - Microsoft Learn. [s.a.]. Model validation in ASP.NET Core MVC. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation> [Accessed 14 August 2026].
-        - Microsoft Learn. [s.a.]. Tag Helpers in forms in ASP.NET Core. [online]. Available at: <https://learn.microsoft.com/en-us/aspnet/core/mvc/views/working-with-forms> [Accessed 14 August 2026].
-*/
