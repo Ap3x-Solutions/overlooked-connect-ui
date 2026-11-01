@@ -6,7 +6,7 @@ using OverlookedConnect.Internal.Services;
 
 namespace OverlookedConnect.Internal.Controllers;
 
-[RequireRole("executive", "hr")]
+[RequireRole("executive", "hr", "safety")]
 public class ReportsController : Controller
 {
     private readonly OverlookedApiClient _api;
