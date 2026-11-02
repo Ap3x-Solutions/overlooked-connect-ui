@@ -137,11 +137,20 @@
 
                 <li>
                     <a
-                        class="@Active("Reports", "Audit")"
+                        class="@Active("Reports")"
                         asp-controller="Reports"
                         asp-action="Index">
                         <i class="fas fa-chart-column"></i>
                         Reports
+                    </a>
+                </li>
+
+                <li>
+                    <a class="@Active("Audit")"
+                       asp-controller="Audit"
+                       asp-action="Index">
+                        <i class="fas fa-shield-halved"></i>
+                        Audit
                     </a>
                 </li>
             }
