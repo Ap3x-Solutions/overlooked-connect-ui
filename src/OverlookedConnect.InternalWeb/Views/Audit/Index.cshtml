@@ -10,9 +10,13 @@
         <p class="sub">Immutable record of every sensitive action &nbsp;&middot;&nbsp; Executive access only</p>
     </div>
     <form asp-action="Export" method="post" class="d-inline">
-        @Html.AntiForgeryToken()
-        <button type="submit" class="btn-ovl-ghost"><i class="fas fa-file-export me-2"></i>Export log</button>
-    </form>
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="filter" value="@filter" />
+
+    <button type="submit" class="btn-ovl-ghost">
+        <i class="fas fa-file-export me-2"></i>Export log
+    </button>
+</form>
 </div>
 
 <div class="note note-info mb-3">
@@ -41,15 +45,66 @@
                         <span class="pill @(e.Action == "Approve" ? "pill-ok" : e.Action == "Create" ? "pill-info" : "pill-warn")">@e.Action</span>
                     </td>
                     <td>@e.Entity</td>
-                    <td class="text-muted">@e.OldValue</td>
-                    <td class="t-strong">@e.NewValue</td>
-                </tr>
+                    <td class="text-muted"
+                    style="white-space:pre-line;overflow-wrap:anywhere;">
+                    @e.OldValue
+                    </td>
+
+                    <td class="t-strong"
+                    style="white-space:pre-line;overflow-wrap:anywhere;">
+                    @e.NewValue
+                    </td>
+                    </tr>
             }
             </tbody>
         </table>
     </div>
 </div>
 
+@{
+    var totalEntries = ViewBag.TotalEntries is int total ? total : 0;
+    var currentPage = ViewBag.CurrentPage is int page ? page : 1;
+    var totalPages = ViewBag.TotalPages is int pages ? pages : 0;
+}
+
 <p class="text-muted mt-3" style="font-size:.75rem;">
-    Showing @Model.Count of 4 218 entries &nbsp;&middot;&nbsp; retained for 7 years in line with statutory record-keeping requirements.
+    Showing @Model.Count records on page @currentPage
+    of @totalEntries total entries.
 </p>
+
+@if (totalPages > 1)
+{
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        @if (currentPage > 1)
+        {
+            <a class="btn-ovl-ghost"
+               asp-action="Index"
+               asp-route-filter="@filter"
+               asp-route-page="@(currentPage - 1)">
+                Previous
+            </a>
+        }
+        else
+        {
+            <span></span>
+        }
+
+        <span class="text-muted">
+            Page @currentPage of @totalPages
+        </span>
+
+        @if (currentPage < totalPages)
+        {
+            <a class="btn-ovl-ghost"
+               asp-action="Index"
+               asp-route-filter="@filter"
+               asp-route-page="@(currentPage + 1)">
+                Next
+            </a>
+        }
+        else
+        {
+            <span></span>
+        }
+    </div>
+}

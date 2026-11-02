@@ -1,4 +1,6 @@
+
 @model ReportRequestModel
+
 @{
     ViewData["Title"] = "Reports & Analytics";
 }
@@ -6,86 +8,178 @@
 <div class="page-head">
     <div>
         <h1>Reports &amp; Analytics</h1>
-        <p class="sub">Generate and export HR, safety, supplier and ESG reports</p>
+        <p class="sub">
+            Generate downloadable reports from live
+            Overlooked Connect records.
+        </p>
     </div>
-    <a class="btn-ovl-ghost" asp-controller="Audit" asp-action="Index"><i class="fas fa-shield-halved me-2"></i>Audit log</a>
+
+    <a class="btn-ovl-ghost"
+       asp-controller="Audit"
+       asp-action="Index">
+        <i class="fas fa-shield-halved me-2"></i>
+        Audit log
+    </a>
 </div>
 
 <div class="card mb-4">
     <div class="card-body p-4">
-        <span class="card-title-sm d-block mb-3">Build a report</span>
-        <form asp-action="Generate" method="post" class="row g-3 align-items-end needs-validation" novalidate>
+
+        <h2 class="card-title-sm mb-3">
+            Build a report
+        </h2>
+
+        <form asp-controller="Reports"
+              asp-action="Generate"
+              method="post"
+              class="row g-3 align-items-end">
+
             @Html.AntiForgeryToken()
-            <div class="col-12 col-md-3">
-                <label asp-for="ReportType" class="form-label">Report type</label>
-                <select asp-for="ReportType" class="form-select">
-                    <option>Safety incident summary</option><option>Workforce headcount</option>
-                    <option>Leave liability</option><option>Supplier &amp; B-BBEE spend</option><option>ESG &amp; CSR summary</option>
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger small"></div>
+
+            <div class="col-12 col-md-4">
+                <label asp-for="ReportType"
+                       class="form-label">
+                    Report type
+                </label>
+
+                <select asp-for="ReportType"
+                        class="form-select">
+                    <option value="Safety incident summary">
+                        Safety incident summary
+                    </option>
+                    <option value="Workforce headcount">
+                        Workforce headcount
+                    </option>
+                    <option value="Leave register">
+                        Leave register
+                    </option>
                 </select>
-                <span asp-validation-for="ReportType" class="text-danger small"></span>
+
+                <span asp-validation-for="ReportType"
+                      class="text-danger small"></span>
             </div>
-            <div class="col-12 col-md-3">
-                <label asp-for="DateRange" class="form-label">Date range</label>
-                <select asp-for="DateRange" class="form-select">
-                    <option>01 Jul &ndash; 31 Jul 2026</option><option>Q2 2026</option><option>Year to date 2026</option>
+
+            <div class="col-12 col-md-4">
+                <label asp-for="BusinessUnit"
+                       class="form-label">
+                    Business unit
+                </label>
+
+                <select asp-for="BusinessUnit"
+                        class="form-select">
+                    <option value="All units">
+                        All units
+                    </option>
+                    <option value="Mining Operations">
+                        Mining Operations
+                    </option>
+                    <option value="Processing &amp; Logistics">
+                        Processing &amp; Logistics
+                    </option>
+                    <option value="Corporate Services">
+                        Corporate Services
+                    </option>
                 </select>
             </div>
-            <div class="col-12 col-md-3">
-                <label asp-for="BusinessUnit" class="form-label">Business unit</label>
-                <select asp-for="BusinessUnit" class="form-select">
-                    <option>All units</option><option>Mining Operations</option><option>Processing &amp; Logistics</option><option>Corporate Services</option>
+
+            <div class="col-12 col-md-2">
+                <label asp-for="Format"
+                       class="form-label">
+                    Export format
+                </label>
+
+                <select asp-for="Format"
+                        class="form-select">
+                    <option value="CSV">CSV</option>
                 </select>
             </div>
-            <div class="col-8 col-md-2">
-                <label asp-for="Format" class="form-label">Format</label>
-                <select asp-for="Format" class="form-select"><option>PDF</option><option>XLSX</option></select>
-            </div>
-            <div class="col-4 col-md-1">
-                <button type="submit" class="btn-ovl w-100">Generate</button>
+
+            <div class="col-12 col-md-2">
+                <button type="submit"
+                        class="btn-ovl w-100">
+                    <i class="fas fa-download me-1"></i>
+                    Download
+                </button>
             </div>
         </form>
+
+        <p class="text-muted small mt-3 mb-0">
+            Reports are generated from the connected
+            backend database. CSV files can be opened
+            using Microsoft Excel.
+        </p>
     </div>
 </div>
 
-<h2 style="font-size:1.15rem;" class="mb-3">Standard reports</h2>
+<h2 style="font-size:1.15rem;" class="mb-3">
+    Available reports
+</h2>
+
 <div class="row g-3 mb-4">
-    @foreach (var r in new[] {
-        ("Workforce headcount","HR &middot; by business unit and job title","Monthly","#1E3A63"),
-        ("Leave liability","HR &middot; accrued balance in rand value","Monthly","#2C5691"),
-        ("Safety incident summary","Safety &middot; severity, status, LTIFR trend","Monthly","#C0392B"),
-        ("DMRE statutory return","Safety &middot; reportable incidents","Quarterly","#C0392B"),
-        ("Supplier &amp; B-BBEE spend","Procurement &middot; spend by B-BBEE level","Quarterly","#1E6B3A"),
-        ("ESG &amp; CSR summary","Community &middot; spend, beneficiaries, progress","Quarterly","#22A55B") })
+
+    @foreach (var report in new[] {
+        (
+            "Workforce headcount",
+            "Employee records, business units, job titles and status.",
+            "fa-users",
+            "#1E3A63"
+        ),
+        (
+            "Leave register",
+            "Employee leave requests, dates, duration and status.",
+            "fa-calendar-check",
+            "#2C5691"
+        ),
+        (
+            "Safety incident summary",
+            "Recorded safety incidents, severity, status and escalation.",
+            "fa-helmet-safety",
+            "#C0392B"
+        )
+    })
     {
-        <div class="col-12 col-md-6 col-xl-4">
-            <div class="card h-100" style="border-left:4px solid @r.Item4;">
+        <div class="col-12 col-md-4">
+            <div class="card h-100"
+                 style="border-left:4px solid @report.Item4;">
+
                 <div class="card-body p-4">
-                    <h3 style="font-size:.95rem;">@Html.Raw(r.Item1)</h3>
-                    <p class="text-muted" style="font-size:.76rem;margin-top:6px;">@Html.Raw(r.Item2)</p>
-                    <span class="pill pill-muted mt-2 d-inline-block">@r.Item3</span>
-                    <hr class="my-3" />
-                    <div class="d-flex gap-3">
-                        <a href="#" style="font-size:.76rem;font-weight:600;color:#0F1E3A;"><i class="fas fa-file-pdf me-1" style="color:#C0392B;"></i>PDF</a>
-                        <a href="#" style="font-size:.76rem;font-weight:600;color:#0F1E3A;"><i class="fas fa-file-excel me-1" style="color:#1E6B3A;"></i>XLSX</a>
-                    </div>
+                    <i class="fas @report.Item3 mb-3"
+                       style="color:@report.Item4;"></i>
+
+                    <h3 style="font-size:.95rem;">
+                        @report.Item1
+                    </h3>
+
+                    <p class="text-muted small">
+                        @report.Item2
+                    </p>
+
+                    <span class="pill pill-muted">
+                        CSV export
+                    </span>
                 </div>
             </div>
         </div>
     }
 </div>
 
-<h2 style="font-size:1.15rem;" class="mb-3">Recently generated</h2>
 <div class="card">
-    <div class="table-wrap">
-        <table class="data-table">
-            <thead><tr><th>Report</th><th>Generated by</th><th>Date</th><th>Period</th><th>Format</th><th></th></tr></thead>
-            <tbody>
-                <tr><td class="t-strong">Safety incident summary</td><td class="text-muted">T. Mahlangu</td><td class="text-muted">22 Jul 2026</td><td class="text-muted">Jun 2026</td><td><span class="pill pill-muted">PDF</span></td><td><a href="#"><i class="fas fa-download"></i></a></td></tr>
-                <tr><td class="t-strong">Workforce headcount</td><td class="text-muted">N. Sithole</td><td class="text-muted">18 Jul 2026</td><td class="text-muted">Jun 2026</td><td><span class="pill pill-muted">XLSX</span></td><td><a href="#"><i class="fas fa-download"></i></a></td></tr>
-                <tr><td class="t-strong">Supplier &amp; B-BBEE spend</td><td class="text-muted">S. Nkosi</td><td class="text-muted">12 Jul 2026</td><td class="text-muted">Q2 2026</td><td><span class="pill pill-muted">PDF</span></td><td><a href="#"><i class="fas fa-download"></i></a></td></tr>
-            </tbody>
-        </table>
+    <div class="card-body p-4">
+        <h2 style="font-size:1.05rem;">
+            Report availability
+        </h2>
+
+        <p class="text-muted small mb-0">
+            PDF and XLSX exports, supplier spend,
+            ESG reporting and saved report history
+            are not yet available.
+        </p>
     </div>
 </div>
 
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -104,7 +104,7 @@ namespace OverlookedConnect.Internal.Models
         public string BusinessUnit { get; set; } = "All units";
 
         [Required(ErrorMessage = "Select an export format.")]
-        public string Format { get; set; } = "PDF";
+        public string Format { get; set; } = "CSV";
     }
 
     /* ---------------- Page view models ---------------- */
